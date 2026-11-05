@@ -1,0 +1,54 @@
+{
+ "book": "summit",
+ "collections": {
+  "0x31410245e2c9c4e37ca7fa7b164bed790c3011ce14e82e035fbf692fcb16320d": "GNC3-Full",
+  "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0": "Summit"
+ },
+ "records": [
+  {
+   "date": "2026-11-05",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "314b284a720748460418926d5f64d8d729d4ebea339c03c1f7840b8de5640049",
+   "committed_at": "2026-11-05T12:20:15Z",
+   "tx_hash": "0x4d43a0289eb98ce559bd01fa27613b7143f3ca7801a799e1bd3edaab8555c2ed",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-04",
+   "collection_cid": "0x31410245e2c9c4e37ca7fa7b164bed790c3011ce14e82e035fbf692fcb16320d",
+   "sha256": "57457c72f0c702cbe9d1d8e92ab0a9fce85c78105ae9090960b04d4ecafa36ee",
+   "committed_at": "2026-11-04T12:08:04Z",
+   "tx_hash": "0xd15e382275fe5c523dc82e8e03ad2bcb165c0432d6db5a6b482d0f1b4ddc8ad8",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-03",
+   "collection_cid": "0x31410245e2c9c4e37ca7fa7b164bed790c3011ce14e82e035fbf692fcb16320d",
+   "sha256": "ba3f592b4961813de7a02d0b4a852394fda69df59e9e86dc05c893aa28795855",
+   "committed_at": "2026-11-03T12:07:36Z",
+   "tx_hash": "0x75b8c7f85178508a3110bd3dee6f02fc655b81933f23215a7bbccd685abc2bf5",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-02",
+   "collection_cid": "0x31410245e2c9c4e37ca7fa7b164bed790c3011ce14e82e035fbf692fcb16320d",
+   "sha256": "eced7555f6c2dd409e60372635bb801d18656fe8f87826d3541d7aef76d4760d",
+   "committed_at": "2026-11-02T12:07:33Z",
+   "tx_hash": "0x1a727945351d7d506ab0dde36d04c76015440ac4c59d87696bcc31f610f56d53",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-10-30",
+   "collection_cid": "0x31410245e2c9c4e37ca7fa7b164bed790c3011ce14e82e035fbf692fcb16320d",
+   "sha256": "f1fdd72bacbf8f19c86724c7164a1722e435271f066319933cb2bfbdb01e072a",
+   "committed_at": "2026-10-30T11:08:03Z",
+   "tx_hash": "0x789fa2160793e4d401838886a50ed70cbb8bdd83f20e48aefd70b5721d2f07ea",
+   "chain_id": 137,
+   "file": null
+  }
+ ]
+}

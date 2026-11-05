@@ -1,0 +1,17 @@
+{
+ "book": "ridgeline",
+ "collections": {
+  "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c": "Ridgeline"
+ },
+ "records": [
+  {
+   "date": "2026-11-05",
+   "collection_cid": "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c",
+   "sha256": "8f3dc0ec91879912b8a34b0c3bfa120125b021c91f4447313b1e2e4e0a5b5b58",
+   "committed_at": "2026-11-05T12:21:46Z",
+   "tx_hash": "0x44380abed51dd2825034b1f74f45e381364be7a8805f3036b7c1b51741f4cc18",
+   "chain_id": 137,
+   "file": null
+  }
+ ]
+}
