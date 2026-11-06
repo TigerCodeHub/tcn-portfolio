@@ -1,0 +1,27 @@
+{
+ "book": "summit",
+ "name": "Summit",
+ "inception": "2026-11-05",
+ "as_of": "2026-11-06",
+ "benchmarks": {
+  "SPY": "S&P 500 (SPY)",
+  "QQQ": "Nasdaq-100 (QQQ)",
+  "IWM": "Russell 2000 (IWM)",
+  "RSP": "S&P 500 Equal Weight (RSP)",
+  "DIA": "Dow Jones (DIA)"
+ },
+ "series": [
+  {
+   "date": "2026-11-06",
+   "r": 0.027136,
+   "index": 102.7136,
+   "bench": {
+    "SPY": 0.00322,
+    "QQQ": 0.013987,
+    "IWM": 0.009816,
+    "RSP": -0.003781,
+    "DIA": -0.003986
+   }
+  }
+ ]
+}
