@@ -1,0 +1,28 @@
+{
+ "book": "ridgeline",
+ "name": "Ridgeline",
+ "inception": "2026-11-05",
+ "as_of": "2026-11-10",
+ "benchmarks": {
+  "SPY": "S&P 500 (SPY)",
+  "QQQ": "Nasdaq-100 (QQQ)",
+  "IWM": "Russell 2000 (IWM)",
+  "RSP": "S&P 500 Equal Weight (RSP)",
+  "DIA": "Dow Jones (DIA)"
+ },
+ "series": [
+  {
+   "date": "2026-11-10",
+   "r": 6.2e-05,
+   "index": 100.0062,
+   "bench": {
+    "SPY": 0.023083,
+    "QQQ": 0.042825,
+    "IWM": 0.035353,
+    "RSP": 0.01849,
+    "DIA": 0.014506
+   },
+   "from": "2026-11-05"
+  }
+ ]
+}
