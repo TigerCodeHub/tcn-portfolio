@@ -6,6 +6,15 @@
  },
  "records": [
   {
+   "date": "2026-11-10",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "ab7be45a2cbecf80be7a73265c0aa348145af58f599e80565910ca243e5cf17d",
+   "committed_at": "2026-11-10T12:20:49Z",
+   "tx_hash": "0x160bbc302b626b069a20314a4680c9daa9d91943b5d470db182f9a3b431503d8",
+   "chain_id": 137,
+   "file": null
+  },
+  {
    "date": "2026-11-09",
    "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
    "sha256": "ae15f27a580e53f84a6cde171e7edda9a7caadbbcb987cf089f186dcbb378b52",
