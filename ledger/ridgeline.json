@@ -5,6 +5,16 @@
  },
  "records": [
   {
+   "date": "2026-11-13",
+   "collection_cid": "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c",
+   "sha256": "97321532aff133b5e452ce8f62213255b33940f5952c414de5d2aff4cdd61ab3",
+   "object_cid": "0x54a7ac9ed94be4d0ac9cae25ff3248d27678057b51bcdd6db630ac41b59ae41f",
+   "committed_at": "2026-11-13T12:21:34Z",
+   "tx_hash": "0x668da10cf291f56c75189eecd3361c75b225cb67ec139be9ca4a24a0719b358f",
+   "chain_id": 137,
+   "file": null
+  },
+  {
    "date": "2026-11-12",
    "collection_cid": "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c",
    "sha256": "f509c88233274ac89e567e3a08e79ef9a20c1571b04af1114abe732556cbf65d",
@@ -67,7 +77,7 @@
  ],
  "smoothed": {
   "collection_cid": "0x5c2c955cf8702149928cf1cd987813ea5fe3a13daa2d41efaeb9e1a1842bf0d5",
-  "date": "2026-11-12",
-  "object_cid": "0x0d8373b1f883154e4677ca43f175d7bc9ad47e44a5818c17e187ae62644cf7d2"
+  "date": "2026-11-13",
+  "object_cid": "0x2a9bd97d30572c9af71a88f6df213bef09a2a4cedf0cddabc37ac9041cf63740"
  }
 }
