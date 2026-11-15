@@ -1,0 +1,330 @@
+---
+import Base from "../layouts/Base.astro";
+import BookPanel from "../components/BookPanel.astro";
+import { num, pct, type Returns } from "../lib/perf";
+import type { Ledger } from "../lib/ledger";
+import { BOOKS } from "../data/site";
+import { BACKTEST, BACKTEST_SPY, BACKTEST_WINDOW, type BacktestRow } from "../data/backtest";
+import backtestJson from "../data/backtest-returns.json";
+import PerfChart from "../components/PerfChart.astro";
+import { url } from "../lib/url";
+
+const returnsFiles = import.meta.glob<Returns>("../data/returns/*.json", { eager: true, import: "default" });
+const ledgerFiles = import.meta.glob<Ledger>("../data/ledger/*.json", { eager: true, import: "default" });
+const books = BOOKS.flatMap((b) => {
+  const data = returnsFiles[`../data/returns/${b.id}.json`];
+  if (!data) return [];
+  const ledger = ledgerFiles[`../data/ledger/${b.id}.json`] ?? { book: b.id, collections: {}, records: [] };
+  return [{ ...b, data, ledger }];
+});
+const tabs = [
+  { id: "real", hash: books[0]?.id ?? "real", label: "Live Track Record" },
+  { id: "backtest", hash: "backtest", label: "Backtest" },
+];
+
+const bigPct = (x: number) => `+${Math.round(x * 100).toLocaleString("en-US")}%`;
+
+const sign = (x: number) => (x > 0 ? "pos" : x < 0 ? "neg" : "");
+const BT_COLS: { key: keyof BacktestRow; fmt: (x: number) => string; better: 1 | -1; tone?: (x: number) => string }[] = [
+  { key: "total", fmt: bigPct, better: 1, tone: sign },
+  { key: "cagr", fmt: (x) => pct(x, 1), better: 1, tone: sign },
+  { key: "vol", fmt: (x) => pct(x, 1, false), better: -1 },
+  { key: "sharpe", fmt: (x) => num(x), better: 1 },
+  { key: "mdd", fmt: (x) => pct(x, 1), better: 1, tone: sign },
+  { key: "beta", fmt: (x) => num(x), better: -1 },
+  { key: "alpha", fmt: (x) => pct(x, 1), better: 1, tone: sign },
+];
+
+const BT = backtestJson as unknown as Record<string, Returns>;
+const backtest = BOOKS.filter((b) => BACKTEST[b.id] && BT[b.id]).map((b) => ({
+  id: b.id,
+  name: BT[b.id].name,
+  row: BACKTEST[b.id],
+  data: BT[b.id],
+}));
+const SECOND_COLOR = "#3b82c4";
+const [first, second] = backtest;
+const combined: Returns | null =
+  first && second
+    ? {
+        ...first.data,
+        benchmarks: { [second.name]: second.name, ...first.data.benchmarks },
+        series: first.data.series.map((row, i) => ({
+          ...row,
+          bench: { [second.name]: second.data.series[i].r, ...row.bench },
+        })),
+      }
+    : null;
+const btRows = [...backtest.map((b) => ({ name: b.name, row: b.row })), { name: "S&P 500 (SPY)", row: BACKTEST_SPY }];
+const bestOf = Object.fromEntries(
+  BT_COLS.map((c) => [c.key, c.better * Math.max(...btRows.map((r) => c.better * r.row[c.key]))]),
+) as Record<keyof BacktestRow, number>;
+---
+
+<Base
+  title="Performance"
+  description="Live account and backtest performance of TCN equity allocation models, with hash-committed daily allocations."
+  active="performance"
+>
+  <section class="page-head">
+    <div class="wrap">
+      <div>
+        <h1>Performance</h1>
+      </div>
+      <nav class="tabs top" role="tablist" aria-label="Performance views">
+        {
+          tabs.map((t, i) => (
+            <a href={`#${t.hash}`} role="tab" id={`tab-${t.id}`} aria-controls={`panel-${t.id}`} aria-selected={i === 0 ? "true" : "false"} data-tab={t.id}>
+              {t.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="tabpanel" id="panel-real" data-panel="real" role="tabpanel" aria-labelledby="tab-real">
+      <div class="books-intro">
+        <ul>
+          {
+            books.map((b) => (
+              <li>
+                <b>{b.data.name}</b>: {b.blurb}
+              </li>
+            ))
+          }
+        </ul>
+        <p>
+          Both trade large-cap U.S. equities (long-only). Charts show real account returns, net of trading costs
+          (trading fees, whole-share rounding, etc.) and gross of tax.
+        </p>
+      </div>
+      <nav class="tabs sub" role="tablist" aria-label="Live accounts">
+        {
+          books.map((b, i) => (
+            <a href={`#${b.id}`} role="tab" id={`tab-${b.id}`} aria-controls={`panel-${b.id}`} aria-selected={i === 0 ? "true" : "false"} data-subtab={b.id}>
+              {b.data.name}
+            </a>
+          ))
+        }
+      </nav>
+      {
+        books.map((b) => (
+          <div class="subpanel" id={`panel-${b.id}`} data-subpanel={b.id} role="tabpanel" aria-labelledby={`tab-${b.id}`}>
+            <BookPanel data={b.data} ledger={b.ledger} />
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="tabpanel" id="panel-backtest" data-panel="backtest" role="tabpanel" aria-labelledby="tab-backtest">
+      <section class="section">
+        <div class="section-head">
+          <h2>Backtest</h2>
+        </div>
+        <p class="lede full">
+          Six-fold cross-validation over 2001–2025: each fold is scored by models trained without it, and the six
+          out-of-sample period results are joined into one record. Each book is simulated the same as the live book,
+          with weekly trades towards a smoothed target.
+        </p>
+        <div class="table-scroll">
+          <table class="data bt-table">
+            <thead>
+              <tr>
+                <th class="nowrap">{BACKTEST_WINDOW}</th>
+                <th class="r">Total return</th>
+                <th class="r">Return (ann.)</th>
+                <th class="r">Volatility</th>
+                <th class="r">Sharpe</th>
+                <th class="r">Max drawdown</th>
+                <th class="r">Beta</th>
+                <th class="r">Alpha-to-SPY</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                btRows.map(({ name, row }) => (
+                  <tr>
+                    <td class="nowrap">{name}</td>
+                    {BT_COLS.map((c) => (
+                      <td class:list={["r num", c.tone?.(row[c.key]), { best: row[c.key] === bestOf[c.key] }]}>
+                        {c.fmt(row[c.key])}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+        {
+          combined && (
+            <div class="bt">
+              <PerfChart
+                data={combined}
+                title="Growth of $10,000 - Log Scale"
+                growth={10_000}
+                chartOnly
+                fixedBook={false}
+                defaults={[second!.name, "SPY"]}
+                colors={{ [second!.name]: SECOND_COLOR }}
+                step="week"
+                height={380}
+                foot="RSP starts in May 2003, when the fund launched."
+              />
+            </div>
+          )
+        }
+      </section>
+      <section class="section">
+        <h3 class="about-head">About these results</h3>
+        <p class="fineprint">
+          Backtested results have inherent limitations, including the benefit of hindsight in model design. Past
+          performance does not guarantee future results. See <a href={url("/disclosures/")}>Disclosures</a> for the
+          full text.
+        </p>
+      </section>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const tabs = [...document.querySelectorAll<HTMLAnchorElement>("[data-tab]")];
+  const panels = [...document.querySelectorAll<HTMLElement>(".tabpanel")];
+  const subtabs = [...document.querySelectorAll<HTMLAnchorElement>("[data-subtab]")];
+  const subpanels = [...document.querySelectorAll<HTMLElement>(".subpanel")];
+  const books = subpanels.map((p) => p.dataset.subpanel!);
+  let book = books[0];
+
+  function show(hash: string) {
+    const top = hash === "backtest" ? "backtest" : "real";
+    if (books.includes(hash)) book = hash;
+    for (const p of panels) p.hidden = p.dataset.panel !== top;
+    for (const t of tabs) t.setAttribute("aria-selected", String(t.dataset.tab === top));
+    for (const p of subpanels) p.hidden = p.dataset.subpanel !== book;
+    for (const t of subtabs) t.setAttribute("aria-selected", String(t.dataset.subtab === book));
+  }
+
+  const go = (hash: string) => {
+    history.replaceState(null, "", `#${hash}`);
+    show(hash);
+  };
+  for (const t of tabs) {
+    t.addEventListener("click", (e) => {
+      e.preventDefault();
+      go(t.dataset.tab === "backtest" ? "backtest" : book);
+    });
+  }
+  for (const t of subtabs) {
+    t.addEventListener("click", (e) => {
+      e.preventDefault();
+      go(t.dataset.subtab!);
+    });
+  }
+  window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+  show(location.hash.slice(1));
+</script>
+
+<style>
+  .tabs {
+    display: flex;
+    gap: 28px;
+    border-bottom: 1px solid var(--rule);
+    font-size: 0.9rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .tabs a {
+    padding: 12px 0 9px;
+    color: var(--ink-2);
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tabs a:hover {
+    color: var(--link);
+    text-decoration: none;
+  }
+  .tabs a[aria-selected="true"] {
+    color: var(--ink);
+    font-weight: 600;
+    border-bottom-color: var(--navy);
+  }
+  .books-intro {
+    margin: 16px 0 4px;
+    color: var(--ink-2);
+    font-size: 0.92rem;
+  }
+  .books-intro ul {
+    margin: 0 0 6px;
+    padding-left: 18px;
+  }
+  .books-intro li + li {
+    margin-top: 2px;
+  }
+  .books-intro b {
+    color: var(--ink);
+  }
+  .books-intro p {
+    margin: 0;
+  }
+  .tabs.top {
+    border-bottom: 0;
+    font-size: 1.15rem;
+    margin-right: 48px;
+  }
+  .tabs.top a {
+    padding: 6px 0 4px;
+  }
+  .tabs.sub {
+    gap: 32px;
+    font-size: 1.05rem;
+    margin-top: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .tabs.sub a {
+    margin-bottom: -2px;
+  }
+  .tabs.sub a {
+    padding: 12px 0 10px;
+  }
+  .below {
+    margin-top: 20px;
+  }
+  .bt {
+    margin-top: 20px;
+  }
+  .pos {
+    color: var(--pos);
+  }
+  .neg {
+    color: var(--neg);
+  }
+  .best {
+    font-weight: 700;
+  }
+  .lede.full {
+    max-width: none;
+  }
+  .about-head {
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 8px;
+  }
+  .bt-table th,
+  .bt-table td {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+  .bt-table th:first-child,
+  .bt-table td:first-child {
+    padding-left: 14px;
+  }
+  .fineprint {
+    margin-top: 12px;
+  }
+  .nowrap {
+    white-space: nowrap;
+  }
+</style>

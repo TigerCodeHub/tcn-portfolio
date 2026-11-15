@@ -1,0 +1,82 @@
+---
+interface Props {
+  title: string;
+  note?: string;
+  height?: number;
+  legend?: string[];
+}
+const { title, note, height = 260, legend = [] } = Astro.props;
+---
+
+<figure class="panel chart">
+  <figcaption>
+    <h3>{title}</h3>
+    {note && <div class="note">{note}</div>}
+  </figcaption>
+  {
+    legend.length > 0 && (
+      <ul class="legend">
+        {legend.map((l, i) => (
+          <li>
+            <i class={`sw sw${i}`} />
+            {l}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  <div class="ph" style={`height:${height}px`}>
+    <span>Chart pending data</span>
+  </div>
+</figure>
+
+<style>
+  .chart {
+    margin: 0;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    list-style: none;
+    margin: 0 0 8px;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--ink-2);
+  }
+  .legend li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sw {
+    width: 14px;
+    height: 2px;
+    display: inline-block;
+  }
+  .sw0 {
+    background: var(--navy-2);
+  }
+  .sw1 {
+    background: var(--ink-3);
+  }
+  .sw2 {
+    background: var(--c-speed);
+  }
+  .ph {
+    border: 1px dashed var(--rule);
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0 51px,
+      var(--rule-2) 51px 52px
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ph span {
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    background: var(--bg);
+    padding: 2px 8px;
+  }
+</style>

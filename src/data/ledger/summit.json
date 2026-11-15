@@ -1,0 +1,83 @@
+{
+ "book": "summit",
+ "collections": {
+  "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0": "Summit"
+ },
+ "records": [
+  {
+   "date": "2026-11-13",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "8b830cb02498a9118d6fbc2c6cd1b36db73b9e02f2199f40bdffeb532c774ee7",
+   "object_cid": "0xd2dd8d1ab691769320a5cad1a6611222a743fa3e78d33d5177d8b8a543bb9191",
+   "committed_at": "2026-11-13T12:21:12Z",
+   "tx_hash": "0xa92cf8903a42043b6d8dcbc9a8e42f40e34421077473cf5a1fda7b77b0fa10a5",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-12",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "50ddfd4bb7800ae31c015b58f16f7ee553c51fef2bcc2cc0c77130752bd81142",
+   "object_cid": "0xb622a2ff531034db76846838a094f172fdc915c02c74df70ecc8ab662a97b1aa",
+   "committed_at": "2026-11-12T12:21:13Z",
+   "tx_hash": "0x74b107f0aba422a87c495d3c4f4a6954264d70969d911a676b466e8b21a7d1e2",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-11",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "7886ea2b3c973e9b7271a707bb627e42cde3990a802b898c9dd6c3d3bd15acde",
+   "object_cid": "0xaf1380e5ba0bfe5eab212d352b03245cd88315e6a750b862eb2baef7056f40ad",
+   "committed_at": "2026-11-11T12:21:03Z",
+   "tx_hash": "0xfdca2b1793376fa1928c6576e6d64f83260afe79e241e7ebcf20e6b0bce5b142",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-10",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "ab7be45a2cbecf80be7a73265c0aa348145af58f599e80565910ca243e5cf17d",
+   "object_cid": "0x3464a3eaba8b4d830766357395b3165157e9695044205c9cd8abf1a5eaeeba20",
+   "committed_at": "2026-11-10T12:20:49Z",
+   "tx_hash": "0x160bbc302b626b069a20314a4680c9daa9d91943b5d470db182f9a3b431503d8",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-09",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "ae15f27a580e53f84a6cde171e7edda9a7caadbbcb987cf089f186dcbb378b52",
+   "object_cid": "0xe820c0c604536da715ff1aeaa806b68ec2edd39d1dfb98832daf30fd330b9386",
+   "committed_at": "2026-11-09T12:20:58Z",
+   "tx_hash": "0xfa8608939d953ea12b1d8d9d6c28237518bcf6c7b719c26824ed8d25e3abf197",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-06",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "f49d520786db7d099fe0c200bfefb24c3b4f864b33d68340a326d04a1062b08b",
+   "object_cid": "0xdf3b38cabe17eced98e564a9dca3744cae27731a682d740e7276a3aa069f2052",
+   "committed_at": "2026-11-06T12:20:39Z",
+   "tx_hash": "0x451a550bd1a33f019f7af673cb58ee6579a9d71baa0017005ad121e8c9dc8ce3",
+   "chain_id": 137,
+   "file": null
+  },
+  {
+   "date": "2026-11-05",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "314b284a720748460418926d5f64d8d729d4ebea339c03c1f7840b8de5640049",
+   "object_cid": "0x11c0e16cff3b7ca99706e335658ad532ac56037a6598c0e0c5786dc7f2e3fd63",
+   "committed_at": "2026-11-05T12:20:15Z",
+   "tx_hash": "0x4d43a0289eb98ce559bd01fa27613b7143f3ca7801a799e1bd3edaab8555c2ed",
+   "chain_id": 137,
+   "file": null
+  }
+ ],
+ "smoothed": {
+  "collection_cid": "0x5172cbb8014dfed1cec814c5a608f7a606eb9706f148d91804c2d7a24e238c56",
+  "date": "2026-11-13",
+  "object_cid": "0x008e6bfbfba9a5ee31ca85888a2b47c4ef7851d4f78806602f0c8bb2c0aea746"
+ }
+}

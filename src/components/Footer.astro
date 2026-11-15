@@ -1,0 +1,35 @@
+---
+import { url } from "../lib/url";
+import { SITE } from "../data/site";
+const year = new Date().getFullYear();
+---
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="disc">
+      This site documents an independent research project. Nothing here is investment advice, a
+      recommendation, or an offer or solicitation to buy or sell any security or to provide advisory
+      services. The author is not a registered investment adviser. See <a href={url("/disclosures/")}
+        >Disclosures</a
+      >.
+    </p>
+    <p class="meta">&copy; {year} {SITE.author}</p>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    margin-top: 56px;
+    border-top: 1px solid var(--rule);
+    background: var(--bg-2);
+    padding: 20px 0 28px;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+  }
+  .disc {
+    max-width: 90ch;
+  }
+  .meta {
+    margin: 0;
+  }
+</style>

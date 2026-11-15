@@ -1,0 +1,24 @@
+---
+interface Figure {
+  k: string;
+  v: string;
+  s?: string;
+  wait?: string;
+}
+interface Props {
+  items: Figure[];
+}
+const { items } = Astro.props;
+---
+
+<div class="figures">
+  {
+    items.map((f) => (
+      <div class="figure">
+        <div class="k">{f.k}</div>
+        <div class="v">{f.v === "—" && f.wait ? <span class="wait">{f.wait}</span> : f.v}</div>
+        {f.s && !(f.v === "—" && f.wait) && <div class="s">{f.s}</div>}
+      </div>
+    ))
+  }
+</div>

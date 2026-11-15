@@ -1,0 +1,71 @@
+---
+import { url } from "../lib/url";
+import { NAV, SITE, type NavKey } from "../data/site";
+
+interface Props {
+  active: NavKey;
+}
+const { active } = Astro.props;
+---
+
+<header class="masthead">
+  <div class="wrap bar">
+    <a class="mark" href={url("/")}>{SITE.name}</a>
+    <nav aria-label="Primary">
+      {
+        NAV.map((n) => (
+          <a href={url(n.href)} aria-current={n.key === active ? "page" : undefined}>
+            {n.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>
+
+<style>
+  .masthead {
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--f-serif);
+  }
+  .bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 20px;
+    padding-bottom: 14px;
+  }
+  .mark {
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 1.3rem;
+  }
+  .mark:hover {
+    text-decoration: none;
+  }
+  nav {
+    display: flex;
+    gap: 28px;
+  }
+  nav a {
+    color: var(--ink-2);
+    font-size: 1.1rem;
+  }
+  nav a:hover {
+    color: var(--ink);
+    text-decoration: none;
+  }
+  nav a[aria-current="page"] {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+  @media (max-width: 640px) {
+    .bar {
+      flex-direction: column;
+      gap: 6px;
+    }
+  }
+</style>

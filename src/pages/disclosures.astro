@@ -1,0 +1,83 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE } from "../data/site";
+---
+
+<Base title="Disclosures" description="Important information about the research results shown on this site." active="disclosures">
+  <section class="page-head">
+    <div class="wrap">
+      <div>
+        <h1>Disclosures</h1>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap text">
+    <h2>Research only</h2>
+    <p>
+      This site documents an independent research project. Nothing here is investment advice, a
+      recommendation, or an offer or solicitation to buy or sell any security or to provide advisory
+      services. The author is not a registered investment adviser and may hold positions in the securities
+      shown.
+    </p>
+
+    <h2>Performance</h2>
+    <p>
+      Live returns are the daily change in the total value of the author's personal brokerage accounts,
+      including cash and after commissions; on the rare day with a deposit or withdrawal, the return is
+      corrected by hand. No outside capital is managed.
+    </p>
+    <p>
+      Backtests are simulated on historical data with the live trading rules and a cost model. They were
+      never traded, and the models were designed with knowledge of past markets. Past performance, live or
+      simulated, does not guarantee future results; all investing carries risk, including loss of principal.
+    </p>
+
+    <h2>Publication and verification</h2>
+    <p>
+      Each day's target allocation is committed to vBase before the market opens and published at least
+      {SITE.embargoDays} days later. A file whose hash matches its commitment shows the file existed before
+      the returns it is scored on. It establishes timing only; it does not imply profitability, an
+      endorsement by the verification service, or anything else.
+    </p>
+
+    <h2>Third-party data</h2>
+    <p>
+      Prices, benchmark returns, account values and verification records come from third parties,
+      including brokers, market-data providers and vBase, and may be delayed, incomplete or wrong. This site
+      is not affiliated with, sponsored by or endorsed by any company it names; the names only identify
+      where data comes from.
+    </p>
+
+    <h2>No warranty or liability</h2>
+    <p>
+      All information is provided as-is, without warranty of any kind, and may contain errors. The author
+      accepts no liability for any loss or damage arising from its use.
+    </p>
+
+    <h2>Use of this site</h2>
+    <p>
+      Allocation files are published so that the record can be verified. No licence is granted to use them,
+      or any other content on this site, in a commercial product or service.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .text {
+    max-width: 820px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 12px;
+  }
+  .text h2 {
+    font-size: 1rem;
+    margin: 24px 0 6px;
+  }
+  .text p {
+    color: var(--ink-2);
+  }
+  .cid {
+    word-break: break-all;
+  }
+</style>

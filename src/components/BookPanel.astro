@@ -1,0 +1,274 @@
+---
+import Figures from "./Figures.astro";
+import PerfChart from "./PerfChart.astro";
+import StampLedger from "./StampLedger.astro";
+import { BOOK, MIN_RISK_DAYS, fmtDay, metrics, monthly, num, pct, seriesOf, type Returns } from "../lib/perf";
+import type { Ledger } from "../lib/ledger";
+import { SITE, VBASE } from "../data/site";
+
+interface Props {
+  data: Returns;
+  ledger: Ledger;
+}
+const { data, ledger } = Astro.props;
+
+const spyR = seriesOf(data, "SPY");
+const bm = metrics(seriesOf(data, BOOK), spyR);
+const spyM = metrics(spyR);
+const some = (x: number) => (bm.n ? x : null);
+const wait = `Shown after ${MIN_RISK_DAYS}\ntrading days`;
+const figures = [
+  { k: "Record start", v: fmtDay(data.inception), s: "First account snapshot" },
+  { k: "Total return", v: pct(some(bm.total)), s: `${bm.n} trading day${bm.n === 1 ? "" : "s"}` },
+  { k: "S&P 500 (SPY)", v: pct(some(spyM.total)), s: "Same period" },
+  { k: "Volatility", v: pct(bm.vol, 1, false), s: "Annualized", wait },
+  { k: "Sharpe ratio", v: num(bm.sharpe), s: "Annualized, rf = 0", wait },
+  { k: "Max drawdown", v: pct(some(bm.mdd)) },
+  { k: "Beta to SPY", v: num(bm.beta), wait },
+];
+
+const bookM = monthly(data, BOOK);
+const spyMonths = monthly(data, "SPY");
+const monthName = (m: string) =>
+  new Date(`${m}-01T00:00:00Z`).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+const months = [...bookM.keys()].reverse().map((m) => {
+  const a = bookM.get(m)!;
+  const b = spyMonths.get(m) ?? null;
+  return { m: monthName(m), a, b, d: b === null ? null : a - b };
+});
+const sign = (x: number | null) => (x === null ? "muted" : x > 0 ? "pos" : x < 0 ? "neg" : "");
+const tearsheet = VBASE.tearsheets[data.book];
+const untraded = ledger.records.some((r) => r.date < data.inception);
+const fnReturns = untraded ? 3 : 2;
+const nameOf = (cid: string) => VBASE.collectionNames[cid] ?? ledger.collections[cid] ?? cid;
+const smoothedCid = ledger.smoothed?.collection_cid ?? VBASE.smoothedCollections[data.book];
+const collectionLink = (cid: string) =>
+  VBASE.collectionNames[cid]
+    ? `https://app.vbase.com/verify/user-data/?user=${encodeURIComponent(VBASE.user)}&collection_name=${encodeURIComponent(VBASE.collectionNames[cid])}`
+    : null;
+---
+
+<section class="section">
+  {
+    data.sample && (
+      <div class="notice">
+        <b>Sample data.</b> The returns below are synthetic placeholders that exercise the chart and the metrics.
+        They are not the account's results.
+      </div>
+    )
+  }
+  <Figures items={figures} />
+  <div class="below">
+    <PerfChart data={data}>
+      <div class="panel monthly">
+        <h3>Monthly returns</h3>
+        <div class="table-scroll">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th class="r">{data.name}</th>
+                <th class="r">SPY</th>
+                <th class="r">Difference</th>
+              </tr>
+            </thead>
+            <tbody>
+              {
+                months.map((r) => (
+                  <tr>
+                    <td>{r.m}</td>
+                    <td class:list={["r num", sign(r.a)]}>{pct(r.a)}</td>
+                    <td class:list={["r num", sign(r.b)]}>{pct(r.b)}</td>
+                    <td class:list={["r num", sign(r.d)]}>{pct(r.d)}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </PerfChart>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h2>Allocation ledger</h2>
+  </div>
+
+  <div class="how">
+    <ol>
+      <li>
+        <b>Theoretical Daily Target.</b> The model ensemble's target allocation to be held
+        from 4:00 PM on day T through 4:00 PM on day T+1 (ticker, weight) is hashed and committed to the book's{" "}
+        <a href="https://docs.vbase.com/overview/how-vbase-works" target="_blank" rel="noopener">validityBase (vBase)</a>{" "}
+        collection before the open on day T, timestamped on the Polygon blockchain. These targets are the rows below.
+      </li>
+      <li>
+        <b>Traded book.</b> In reality, to reduce turnover, every 5 days the currently held book is smoothed{" "}
+        {VBASE.smoothing * 100}% of the way toward the new target. Trades occur around 3:55 PM. The smoothed book
+        is committed to its own collection.<sup>{fnReturns}</sup>
+      </li>
+      <li>
+        <b>Published.</b> Each target's Content ID (SHA3-256 hash of the file) appears here the same day; this is
+        what is on its vBase stamp and its Polygon transaction. The file itself is unsealed after{" "}
+        {SITE.embargoDays} days.
+      </li>
+    </ol>
+    <dl class="ids">
+      {
+        Object.keys(ledger.collections).map((cid) => (
+          <div>
+            <dt>Theoretical daily targets (listed below)</dt>
+            <dd>
+              {collectionLink(cid) ? (
+                <a href={collectionLink(cid)!} target="_blank" rel="noopener">{nameOf(cid)}</a>
+              ) : (
+                nameOf(cid)
+              )}
+              <br />
+              <code class="cid">{cid}</code>
+            </dd>
+          </div>
+        ))
+      }
+      {
+        smoothedCid && (
+          <div>
+            <dt>Traded book ({VBASE.smoothing} smoothed)</dt>
+            <dd>
+              {collectionLink(smoothedCid) ? (
+                <a href={collectionLink(smoothedCid)!} target="_blank" rel="noopener">{nameOf(smoothedCid)}</a>
+              ) : (
+                nameOf(smoothedCid)
+              )}
+              <br />
+              <code class="cid">{smoothedCid}</code>
+            </dd>
+          </div>
+        )
+      }
+      {
+        tearsheet && (
+          <div>
+            <dt>Independent performance</dt>
+            <dd>
+              <a href={tearsheet}>vBase tearsheet for {data.name}</a>
+            </dd>
+          </div>
+        )
+      }
+    </dl>
+  </div>
+
+  {
+    ledger.sample && (
+      <div class="notice">
+        <b>Sample data.</b> The rows below are placeholders with synthetic hashes and tickers that exercise the
+        ledger and the verify button. They are not real allocations or vBase commitments.
+      </div>
+    )
+  }
+  <p class="attest">
+    The vBase cryptographic timestamps here attest that the allocation targets existed <b>before</b> the time they
+    were traded.
+  </p>
+  <StampLedger ledger={ledger} tradedFrom={data.inception} />
+  <p class="fineprint">
+    <sup>1</sup> On Polygonscan, open the Logs tab: the Content ID is the last topic of the first event, after the stamper
+    address and the Collection ID. A published file can be manually verified by uploading it to{" "}
+    <a href="https://app.vbase.com/verify/?method=file" target="_blank" rel="noopener">vBase Verify</a>.
+  </p>
+  {
+    untraded && (
+      <p class="fineprint tight">
+        <sup>2</sup> Live trading only began on {fmtDay(data.inception)}, due to technical reasons.
+      </p>
+    )
+  }
+  <p class="fineprint tight">
+    <sup>{fnReturns}</sup> Real account returns may differ slightly from the theoretical returns due to
+    integer-share rounding, slippage, broker fees, etc.
+  </p>
+</section>
+
+<style>
+  .below {
+    margin-top: 20px;
+  }
+  .fineprint {
+    margin-top: 12px;
+  }
+  .fineprint.tight {
+    margin-top: 2px;
+  }
+  .attest {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+  }
+  .monthly h3 {
+    margin-bottom: 13px;
+  }
+  .pos {
+    color: var(--pos);
+  }
+  .neg {
+    color: var(--neg);
+  }
+  .how {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+  .how ol {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 0.9rem;
+    color: var(--ink-2);
+  }
+  .how li {
+    margin-bottom: 8px;
+  }
+  .how b {
+    color: var(--ink);
+  }
+  .ids {
+    margin: 0;
+    border: 1px solid var(--rule);
+    font-size: 0.85rem;
+  }
+  .ids {
+    display: flex;
+    flex-direction: column;
+  }
+  .ids div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--rule-2);
+  }
+  .ids div:last-child {
+    border-bottom: 0;
+  }
+  .ids dt {
+    font-size: 0.72rem;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ids dd {
+    margin: 2px 0 0;
+  }
+  .cid {
+    word-break: break-all;
+    font-size: 0.78rem;
+  }
+  @media (max-width: 760px) {
+    .how {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,175 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE } from "../data/site";
+import { url } from "../lib/url";
+import { FIRST_COMMIT } from "../data/timeline";
+
+const days = Math.floor((Date.now() - Date.parse(`${FIRST_COMMIT}T00:00:00Z`)) / 86_400_000).toLocaleString("en-US");
+---
+
+<Base
+  description="A temporal convolutional network for portfolio allocation across large-cap U.S. equities: verifiable live performance and engineering history."
+  active="about"
+>
+  <section class="hero">
+    <div class="wrap top">
+      <div class="title">
+        <h1>A temporal convolutional network for a U.S. equity&nbsp;portfolio</h1>
+        <p class="byline">By {SITE.author}, TJHSST Class of 2028</p>
+      </div>
+      <div class="cards">
+        <a class="card" href={url("/performance/")}>
+          <h2>Performance</h2>
+          <p>
+            Real live track record with a verifiable ledger of cryptographically timestamped daily allocations.
+          </p>
+          <span class="more">View live performance</span>
+        </a>
+        <a class="card" href={url("/research/")}>
+          <h2>Research</h2>
+          <p>
+            {days} days of engineering history: 35,000+ models trained, a 640x improvement on training rate per
+            machine, and the growth from 5 ETFs to a 300 large-cap U.S. equity universe.
+          </p>
+          <span class="more">View history</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="section-head about"><h2>About</h2></div>
+    <div class="facts">
+      <section>
+        <h2>A classical neural network</h2>
+        <ul>
+          <li>Temporal convolutional network (TCN) using dilated causal 1D convolutions</li>
+          <li>About 2.2 million parameters</li>
+          <li><u>Not</u> a large language model (LLM) or generative AI</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Investment universe</h2>
+        <ul>
+          <li>Large-cap U.S. equities</li>
+          <li>Up to 300 of the largest S&amp;P 500 constituents each day</li>
+          <li>Uses only public prices and trading volume</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Built from scratch</h2>
+        <ul>
+          <li>Model architecture built from the ground up in PyTorch</li>
+          <li>Purpose-built Triton GPU kernels for rapid fused operations</li>
+          <li>Custom worker queue and training software</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Verifiable live trading record</h2>
+        <ul>
+          <li>Real-money brokerage accounts trade model allocations</li>
+          <li>Daily allocation hashes timestamped on the Polygon blockchain before trading (via validityBase)</li>
+          <li>Full target allocations are published {SITE.embargoDays} days later; anyone can re-hash them and verify</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+</Base>
+
+<style>
+  .hero {
+    padding: 48px 0 36px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .title {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .hero h1 {
+    font-size: 3rem;
+    line-height: 1.4;
+  }
+  .about {
+    margin-top: 32px;
+  }
+  .byline {
+    margin: 20px 0 0;
+    line-height: 1.6;
+    color: var(--ink-2);
+    font-family: var(--f-serif);
+    font-size: 1.15rem;
+  }
+  .facts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .facts section {
+    border: 1px solid var(--rule);
+    padding: 16px 20px 14px;
+  }
+  .facts h2 {
+    margin-bottom: 6px;
+  }
+  .facts ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--ink-2);
+    font-size: 0.9rem;
+  }
+  .facts li + li {
+    margin-top: 4px;
+  }
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: stretch;
+  }
+  .cards {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--navy);
+    padding: 12px 16px 10px;
+    color: var(--ink);
+  }
+  .card:hover {
+    text-decoration: none;
+    border-color: var(--navy-2);
+  }
+  .card h2 {
+    margin-bottom: 6px;
+  }
+  .card p {
+    color: var(--ink-2);
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin-bottom: 6px;
+  }
+  .more {
+    color: var(--link);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .card:hover .more {
+    text-decoration: underline;
+  }
+  @media (max-width: 760px) {
+    .facts,
+    .top {
+      grid-template-columns: 1fr;
+    }
+    .hero h1 {
+      font-size: 1.5rem;
+    }
+  }
+</style>

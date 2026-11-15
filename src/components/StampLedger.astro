@@ -1,0 +1,149 @@
+---
+import { SITE, VBASE } from "../data/site";
+import type { Ledger } from "../lib/ledger";
+import { stampUrl, txUrl } from "../lib/ledger";
+import { url } from "../lib/url";
+
+interface Props {
+  ledger: Ledger;
+  tradedFrom: string;
+}
+const { ledger, tradedFrom } = Astro.props;
+const records = ledger.records;
+const multi = Object.keys(ledger.collections).length > 1;
+const DAY = 86_400_000;
+const PAGE = 15;
+const nameOf = (cid: string) => VBASE.collectionNames[cid] ?? ledger.collections[cid] ?? "—";
+const vbase = (cid: string | null | undefined) => (ledger.sample ? null : stampUrl(cid));
+
+const fmtDate = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+const fmtTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/New_York",
+    timeZoneName: "short",
+  });
+const opens = (iso: string) => fmtDate(new Date(Date.parse(`${iso}T00:00:00Z`) + SITE.embargoDays * DAY).toISOString().slice(0, 10));
+const short = (h: string) => `${h.slice(0, 10)}…${h.slice(-6)}`;
+---
+
+<div class="table-scroll" data-ledger data-page-size={PAGE}>
+  <table class="data ledger">
+    <thead>
+      <tr>
+        <th>Allocation date</th>
+        <th>Status</th>
+        {multi && <th>Collection</th>}
+        <th title="vBase Content ID: the SHA3-256 hash of the file, as recorded on the blockchain">Content ID (SHA3-256)</th>
+        <th>Committed<sup>1</sup></th>
+        <th>File</th>
+        <th class="r">vBase</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        records.map((r, i) => (
+          <tr data-page={Math.floor(i / PAGE)}>
+            <td class="num">{fmtDate(r.date)}{r.date < tradedFrom && <sup>2</sup>}</td>
+            <td>
+              {r.file ? (
+                <span class="st pub">Published</span>
+              ) : (
+                <span class="st sealed">Sealed until {opens(r.date)}</span>
+              )}
+            </td>
+            {multi && <td>{nameOf(r.collection_cid)}</td>}
+            <td>
+              <code title={r.object_cid ?? r.sha256}>{short(r.object_cid ?? r.sha256)}</code>
+            </td>
+            <td class="num muted">
+              {ledger.sample || !txUrl(r) ? (
+                fmtTime(r.committed_at)
+              ) : (
+                <a href={txUrl(r)} title="Blockchain transaction" target="_blank" rel="noopener">
+                  {fmtTime(r.committed_at)}
+                </a>
+              )}
+            </td>
+            <td>{r.file ? <a href={url(r.file)}>CSV</a> : <span class="muted">—</span>}</td>
+            <td class="r">{vbase(r.object_cid) ? <a href={vbase(r.object_cid)!} target="_blank" rel="noopener">Stamp</a> : <span class="muted">—</span>}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  {
+    records.length > PAGE && (
+      <nav class="pager" aria-label="Ledger pages" hidden>
+        <button type="button" class="btn" data-step="-1">Newer</button>
+        <span class="pos" aria-live="polite"></span>
+        <button type="button" class="btn" data-step="1">Older</button>
+      </nav>
+    )
+  }
+</div>
+
+<script>
+  for (const box of document.querySelectorAll<HTMLElement>("[data-ledger]")) {
+    const rows = [...box.querySelectorAll<HTMLTableRowElement>("tr[data-page]")];
+    const pager = box.querySelector<HTMLElement>(".pager");
+    if (!pager) continue;
+    const pages = Math.max(...rows.map((r) => Number(r.dataset.page))) + 1;
+    const pos = pager.querySelector<HTMLElement>(".pos")!;
+    const [newer, older] = pager.querySelectorAll<HTMLButtonElement>("button");
+    let page = 0;
+    const show = () => {
+      for (const r of rows) r.hidden = Number(r.dataset.page) !== page;
+      pos.textContent = `Page ${page + 1} of ${pages}`;
+      newer.disabled = page === 0;
+      older.disabled = page === pages - 1;
+    };
+    for (const b of [newer, older]) {
+      b.addEventListener("click", () => {
+        page = Math.min(pages - 1, Math.max(0, page + Number(b.dataset.step)));
+        show();
+      });
+    }
+    pager.hidden = false;
+    show();
+  }
+</script>
+
+<style>
+  .ledger code {
+    font-size: 0.8rem;
+  }
+  .st {
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .st.pub {
+    color: var(--pos);
+  }
+  .st.sealed {
+    color: var(--ink-3);
+  }
+  td.r {
+    white-space: nowrap;
+  }
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--ink-3);
+  }
+  .pager[hidden] {
+    display: none;
+  }
+</style>

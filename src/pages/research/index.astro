@@ -1,0 +1,376 @@
+---
+import Base from "../../layouts/Base.astro";
+import Figures from "../../components/Figures.astro";
+import TimelineStrip from "../../components/TimelineStrip.astro";
+import StepChart from "../../components/StepChart.astro";
+import { CATS, COMMITS, ERAS, EVENTS, FIRST_COMMIT, STAGES, THROUGHPUT, TOTAL_THROUGHPUT } from "../../data/timeline";
+
+const fmt = (d: string) =>
+  new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+const days = Math.floor((Date.now() - Date.parse(`${FIRST_COMMIT}T00:00:00Z`)) / 86_400_000);
+const figures = [
+  { k: "First commit", v: fmt(FIRST_COMMIT) },
+  { k: "Days", v: days.toLocaleString("en-US") },
+  { k: "Commits", v: String(COMMITS) },
+];
+const gain = (pts: [string, number][]) => (+(pts[pts.length - 1][1] / pts[0][1]).toPrecision(3)).toLocaleString("en-US");
+const tIdx = (d: string) => TOTAL_THROUGHPUT.findIndex(([t]) => t === d);
+const kfmt = (v: number) =>
+  v >= 1e6 ? `${+(v / 1e6).toPrecision(2)}M` : v >= 1000 ? `${+(v / 1000).toPrecision(2)}k` : String(v);
+---
+
+<Base
+  title="Research"
+  description="Engineering and research history of a TCN equity allocation model: compute, training speed, universe size and production milestones."
+  active="research"
+>
+  <section class="page-head">
+    <div class="wrap">
+      <div>
+        <h1>Research and engineering history</h1>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <section class="section">
+      <p class="lede note-prop">
+        Much of the research (features, model architecture, training methods and more) is proprietary and not
+        disclosed here. What can be shared is below.
+      </p>
+      <div class="section-head">
+        <h2>Overview</h2>
+      </div>
+      <Figures items={figures} />
+      <TimelineStrip />
+      <ul class="key">
+        {
+          Object.values(CATS).map((c) => (
+            <li>
+              <i style={`background:${c.color}`} />
+              {c.name}
+            </li>
+          ))
+        }
+        <li class="bg">
+          <i class="uni" />
+          Universe size (backdrop)
+        </li>
+        <li class="bg">
+          <i class="models" />
+          Models trained, cumulative
+        </li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Training Throughput Over Time</h2></div>
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Training throughput per machine – {gain(THROUGHPUT)}x improvement</h3>
+          <div class="note">Stock-days processed per second on one machine.</div>
+          <StepChart
+            points={THROUGHPUT}
+            ticks={[0, 20000, 40000, 60000, 80000]}
+            labelAt={[0, 1, 2, 5, 6]}
+            labelLeft={[0, 1]}
+            sqrt
+            fmt={(v) => (v === THROUGHPUT[0][1] ? `${v} (CPU)` : kfmt(v))}
+            ariaLabel="Throughput per machine rose from about 113 stock-days per second on a CPU machine in December 2025 to 1,400 on the first GPU run, 10,700 after caching training windows in RAM, 51,000 after span convolution in August 2026, and about 72,000 after the October 2026 kernels."
+          />
+        </div>
+        <div class="panel">
+          <h3>Total training throughput – {gain(TOTAL_THROUGHPUT)}x increase</h3>
+          <div class="note">Approximate stock-days per second across the available machine pool, which grew larger over time.</div>
+          <StepChart
+            points={TOTAL_THROUGHPUT}
+            ticks={[0, 500000, 1000000, 2000000, 3000000]}
+            labelAt={[0, tIdx("2025-12-26"), tIdx("2026-06-23"), tIdx("2026-08-30"), TOTAL_THROUGHPUT.length - 1]}
+            labelLeft={[0, TOTAL_THROUGHPUT.length - 1]}
+            sqrt
+            fmt={(v) => (v === TOTAL_THROUGHPUT[0][1] ? `${kfmt(v)} (CPU)` : kfmt(v))}
+            ariaLabel="Approximate pool-wide training throughput rose from about 680 stock-days per second from 12 CPU runs in December 2025 to roughly 2.9 million across 40 GPUs in November 2026."
+          />
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Training speed improvements</h2>
+      </div>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Stage</th>
+              <th>Date</th>
+              <th>What changed</th>
+              <th class="r">Gain</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              STAGES.map((s) => (
+                <tr>
+                  <td>
+                    <b>{s.name}</b>
+                  </td>
+                  <td class="num muted">{s.date}</td>
+                  <td>{s.what}</td>
+                  <td class="r">
+                    <b>{s.gain}</b>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="timeline">
+      <div class="section-head">
+        <div class="tl-title">
+          <h2>Timeline</h2>
+          <span class="star-key">
+            <span><span class="k-star small">★</span> Small milestone</span>
+            <span><span class="k-star big">★</span> Major milestone</span>
+          </span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="majorOnly" />
+          Milestones only
+        </label>
+      </div>
+
+      <div class="eras" id="eras">
+        {
+          ERAS.map((era) => (
+            <section class="era">
+              <header>
+                <h3>{era.name}</h3>
+                <div class="span num">
+                  {fmt(era.start)} – {fmt(era.end)}
+                </div>
+              </header>
+              <ol class="events">
+                {EVENTS.filter((e) => e.era === era.id).map((e) => (
+                  <li class:list={["ev", { unstarred: !e.star }]}>
+                    {e.star && (
+                      <span class:list={["star", e.star === "b" ? "big" : "small"]} aria-label={e.star === "b" ? "Major milestone" : "Small milestone"}>
+                        ★
+                      </span>
+                    )}
+                    <time class="num" datetime={e.date}>
+                      {fmt(e.date)}
+                    </time>
+                    <span class="cat" style={`--c:${CATS[e.cat].color}`}>
+                      {CATS[e.cat].name}
+                    </span>
+                    <div class="body">
+                      <div class="title">{e.title}</div>
+                      {e.detail && <div class="detail">{e.detail}</div>}
+                    </div>
+                    <div class="metric num">{e.metric ?? ""}</div>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const box = document.getElementById("majorOnly") as HTMLInputElement;
+  const eras = document.getElementById("eras")!;
+  box.addEventListener("change", () => eras.classList.toggle("major-only", box.checked));
+</script>
+
+<style>
+  .foot {
+    margin-top: 6px;
+  }
+  .key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    font-size: 0.78rem;
+    color: var(--ink-2);
+  }
+  .key .bg {
+    margin-left: 8px;
+  }
+  .key i.uni {
+    background: color-mix(in srgb, var(--c-universe) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c-universe) 45%, transparent);
+  }
+  .key i.models {
+    height: 2px;
+    width: 14px;
+    background: #1f8fb3;
+  }
+  .note-prop {
+    margin: 0 0 20px;
+    max-width: none;
+  }
+  .key li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .key i {
+    width: 9px;
+    height: 9px;
+    display: inline-block;
+  }
+  .tl-title {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .star-key {
+    display: flex;
+    gap: 14px;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+  }
+  .k-star {
+    color: #c4961a;
+  }
+  .k-star.small {
+    font-size: 11px;
+  }
+  .k-star.big {
+    font-size: 20px;
+    line-height: 0;
+  }
+  .toggle {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .era {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 0 28px;
+    border-top: 1px solid var(--rule);
+    padding: 20px 0 8px;
+  }
+  .era:first-child {
+    border-top: 0;
+    padding-top: 4px;
+  }
+  .era header h3 {
+    font-size: 1.05rem;
+  }
+  .era .span {
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    margin: 2px 0 8px;
+  }
+  .era header p {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+  }
+  .events {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ev {
+    display: grid;
+    grid-template-columns: 96px 170px 1fr minmax(96px, max-content);
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule-2);
+    font-size: 0.875rem;
+  }
+  .ev {
+    position: relative;
+  }
+  .star {
+    position: absolute;
+    left: -22px;
+    width: 18px;
+    text-align: center;
+    color: #c4961a;
+    line-height: 1;
+  }
+  .star.big {
+    top: 8px;
+    font-size: 20px;
+  }
+  .star.small {
+    top: 12px;
+    font-size: 11px;
+  }
+  .ev:last-child {
+    border-bottom: 0;
+  }
+  .ev time {
+    color: var(--ink-3);
+    font-size: 0.8rem;
+    padding-top: 1px;
+  }
+  .cat {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-2);
+    border-left: 3px solid var(--c);
+    padding-left: 8px;
+    align-self: start;
+    line-height: 1.6;
+  }
+  .title {
+    font-weight: 600;
+  }
+  .detail {
+    color: var(--ink-2);
+    margin-top: 2px;
+  }
+  .metric {
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .major-only .unstarred {
+    display: none;
+  }
+  @media (max-width: 900px) {
+    .era {
+      grid-template-columns: 1fr;
+    }
+    .ev {
+      grid-template-columns: 90px 1fr auto;
+      padding-left: 20px;
+    }
+    .star {
+      left: 0;
+    }
+    .cat {
+      grid-column: 2 / 4;
+      grid-row: 1;
+    }
+    .ev time {
+      grid-row: 1 / 3;
+    }
+    .body {
+      grid-column: 2;
+    }
+    .metric {
+      grid-column: 3;
+    }
+  }
+</style>

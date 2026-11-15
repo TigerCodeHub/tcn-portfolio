@@ -1,0 +1,498 @@
+---
+import { BOOK, MIN_ANN_DAYS, MIN_RISK_DAYS, fmtDay, metrics, num, pct, seriesOf, type Returns } from "../lib/perf";
+
+interface Props {
+  data: Returns;
+  height?: number;
+  defaults?: string[];
+  title?: string;
+  foot?: string;
+  growth?: number;
+  chartOnly?: boolean;
+  step?: string;
+  fixedBook?: boolean;
+  colors?: Record<string, string>;
+}
+const {
+  data,
+  height = 300,
+  defaults = ["SPY"],
+  title = "Cumulative return",
+  foot = "Returns are the daily change in the account's total value, including cash and after commissions.",
+  growth = 0,
+  chartOnly = false,
+  step = "day",
+  fixedBook = true,
+  colors: extraColors = {},
+} = Astro.props;
+
+const PALETTE: Record<string, string> = {
+  [BOOK]: "#163259",
+  SPY: "#c0446a",
+  QQQ: "#b0651a",
+  IWM: "#2e7d5b",
+  RSP: "#6b4c9a",
+  DIA: "#8a7a1f",
+};
+const SPARE = ["#2f5d8a", "#9a4a5c", "#4f7f86"];
+const tickers = Object.keys(data.benchmarks);
+const color = (k: string) => extraColors[k] ?? PALETTE[k] ?? SPARE[tickers.indexOf(k) % SPARE.length];
+const keys = [BOOK, ...tickers];
+const label = (k: string) => (k === BOOK ? data.name : data.benchmarks[k]);
+
+const spy = data.benchmarks.SPY ? seriesOf(data, "SPY") : undefined;
+const rows = keys.map((k) => ({ k, m: metrics(seriesOf(data, k), spy) }));
+const bold = Object.keys(extraColors);
+const payload = JSON.stringify({ data, growth, step, bold, colors: Object.fromEntries(keys.map((k) => [k, color(k)])) });
+const cls = (x: number | null) => (x === null ? "muted" : x > 0 ? "pos" : x < 0 ? "neg" : "");
+---
+
+<div class="perf" data-perf>
+  <script type="application/json" set:html={payload} />
+
+  <figure class="panel chart">
+    <figcaption>
+      <h3>{title}</h3>
+    </figcaption>
+    <fieldset class="toggles">
+      <legend class="sr">Series shown</legend>
+      {
+        keys.map((k) => (
+          <label class:list={["tg", { fixed: fixedBook && k === BOOK }]}>
+            <input
+              type="checkbox"
+              value={k}
+              checked={k === BOOK || defaults.includes(k)}
+              disabled={fixedBook && k === BOOK}
+            />
+            <i style={`background:${color(k)}`} />
+            {k === BOOK ? data.name : k}
+          </label>
+        ))
+      }
+    </fieldset>
+    <div class="plot" style={`height:${height}px`}>
+      <svg class="main" role="img" aria-label={`${data.name} cumulative return against selected benchmarks`}></svg>
+      <div class="tip" hidden></div>
+      <p class="empty" hidden>
+        The record begins {fmtDay(data.inception)}. The chart starts once a second daily snapshot exists.
+      </p>
+    </div>
+    {foot && <p class="fineprint chart-foot">{foot}</p>}
+  </figure>
+
+  {
+    !chartOnly && (
+  <Fragment>
+  <div class="panel metrics">
+    <h3>Since inception</h3>
+    <div class="note">
+      {fmtDay(data.inception)} – {fmtDay(data.as_of)}, {rows[0].m.n} trading days. Sharpe and Sortino use a zero
+      risk-free rate.
+    </div>
+    <div class="table-scroll">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Series</th>
+            <th class="r">Total return</th>
+            <th class="r">Annualized</th>
+            <th class="r">Volatility</th>
+            <th class="r">Sharpe</th>
+            <th class="r">Sortino</th>
+            <th class="r">Max drawdown</th>
+            {spy && <th class="r">Beta (SPY)</th>}
+            <th class="r">Best day</th>
+            <th class="r">Worst day</th>
+            <th class="r">Up days</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            rows.map(({ k, m }) => (
+              <tr data-key={k} hidden={k !== BOOK && !defaults.includes(k)} class:list={{ book: k === BOOK }}>
+                <td>
+                  <i class="sw" style={`background:${color(k)}`} />
+                  {label(k)}
+                </td>
+                <td class:list={["r num", cls(m.total)]}>{pct(m.total)}</td>
+                <td class:list={["r num", cls(m.ann)]}>{pct(m.ann)}</td>
+                <td class:list={["r num", { muted: m.vol === null }]}>{pct(m.vol, 1, false)}</td>
+                <td class:list={["r num", { muted: m.sharpe === null }]}>{num(m.sharpe)}</td>
+                <td class:list={["r num", { muted: m.sortino === null }]}>{num(m.sortino)}</td>
+                <td class:list={["r num", cls(m.mdd || null)]}>{pct(m.mdd)}</td>
+                {spy && <td class:list={["r num", { muted: m.beta === null }]}>{num(m.beta)}</td>}
+                <td class:list={["r num", cls(m.best)]}>{pct(m.best)}</td>
+                <td class:list={["r num", cls(m.worst)]}>{pct(m.worst)}</td>
+                <td class:list={["r num", { muted: m.upShare === null }]}>{pct(m.upShare, 0, false)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="fineprint">
+      {`Annualized return is shown after ${MIN_ANN_DAYS} trading days; volatility, Sharpe, Sortino and beta after ${MIN_RISK_DAYS}.`}
+    </p>
+  </div>
+
+  <div class="grid-2 below">
+    <figure class="panel chart">
+      <figcaption>
+        <h3>Drawdown</h3>
+        <div class="note">Decline from the running peak, same series as above.</div>
+      </figcaption>
+      <div class="plot" style="height:200px">
+        <svg class="dd" role="img" aria-label="Drawdown from running peak"></svg>
+      </div>
+    </figure>
+    <slot />
+  </div>
+  </Fragment>
+    )
+  }
+</div>
+
+<script>
+  import { BOOK, drawdown, fmtDay, pct, seriesOf, wealth, type Returns } from "../lib/perf";
+
+  const NS = "http://www.w3.org/2000/svg";
+  const M = { l: 48, r: 12, t: 10, b: 24 };
+
+  function niceStep(span: number, target: number) {
+    const raw = span / target;
+    const p = 10 ** Math.floor(Math.log10(raw));
+    return ([1, 2, 2.5, 5, 10].find((s) => s * p >= raw) ?? 10) * p;
+  }
+
+  function el(tag: string, attrs: Record<string, string | number>, parent?: Element) {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    parent?.appendChild(e);
+    return e;
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-perf]")) {
+    const { data, colors, growth, step, bold } = JSON.parse(root.querySelector("script[type='application/json']")!.textContent!) as {
+      data: Returns;
+      colors: Record<string, string>;
+      growth: number;
+      bold: string[];
+      step: string;
+    };
+    const boxes = [...root.querySelectorAll<HTMLInputElement>(".toggles input")];
+    for (const b of boxes) {
+      const tr = root.querySelector<HTMLElement>(`tr[data-key="${b.value}"]`);
+      if (tr) tr.hidden = !b.checked;
+    }
+    const main = root.querySelector<SVGSVGElement>("svg.main")!;
+    const dd = root.querySelector<SVGSVGElement>("svg.dd");
+    const tip = root.querySelector<HTMLElement>(".tip")!;
+    const dates = [data.inception, ...data.series.map((x) => x.date)];
+    const n = data.series.length;
+
+    if (n < 1) {
+      main.style.display = "none";
+      root.querySelector<HTMLElement>(".empty")!.hidden = false;
+    }
+
+    const active = () => boxes.filter((b) => b.checked).map((b) => b.value);
+    const cum = Object.fromEntries(
+      [BOOK, ...Object.keys(data.benchmarks)].map((k) => {
+        const rs = seriesOf(data, k);
+        const first = Math.max(0, rs.findIndex((r) => r !== null));
+        return [k, wealth(rs).map((v, i) => (i < first ? NaN : growth ? v * growth : v - 1))];
+      }),
+    );
+    const money = (v: number) =>
+      !Number.isFinite(v) ? "—" : v >= 1e6 ? `$${(v / 1e6).toFixed(2)}M` : `$${Math.round(v).toLocaleString("en-US")}`;
+    const value = (v: number) => (growth ? money(v) : pct(v));
+    const dds = Object.fromEntries(
+      [BOOK, ...Object.keys(data.benchmarks)].map((k) => [k, drawdown(seriesOf(data, k))]),
+    );
+    const label = (k: string) => (k === BOOK ? data.name : k);
+
+    function draw(svg: SVGSVGElement, vals: Record<string, number[]>, zeroTop: boolean, hover: boolean) {
+      svg.replaceChildren();
+      if (n < 1) return;
+      const W = svg.clientWidth;
+      const H = svg.clientHeight;
+      if (!W || !H) return;
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+      const keys = active();
+      const all = keys.flatMap((k) => vals[k]).filter(Number.isFinite);
+      if (!all.length) return;
+      const x = (i: number) => M.l + (i / n) * (W - M.l - M.r);
+      let y: (v: number) => number;
+      if (growth && !zeroTop) {
+        const lo = Math.log10(Math.min(...all));
+        const hi = Math.log10(Math.max(...all));
+        y = (v: number) => M.t + ((hi - Math.log10(v)) / (hi - lo)) * (H - M.t - M.b);
+        for (let e = Math.floor(lo); e <= Math.ceil(hi); e++) {
+          for (const m of [1, 2, 5]) {
+            const v = m * 10 ** e;
+            if (Math.log10(v) < lo || Math.log10(v) > hi) continue;
+            el("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: "grid" }, svg);
+            const t = el("text", { x: M.l - 6, y: y(v) + 4, class: "ax", "text-anchor": "end" }, svg);
+            t.textContent = v >= 1e6 ? `$${v / 1e6}M` : `$${v / 1e3}k`;
+          }
+        }
+      } else {
+        let lo = Math.min(0, ...all);
+        let hi = zeroTop ? 0 : Math.max(0, ...all);
+        if (hi - lo < 1e-4) lo -= 0.01;
+        const step = niceStep(hi - lo, H > 220 ? 6 : 4);
+        lo = Math.floor(lo / step) * step;
+        hi = Math.ceil(hi / step) * step;
+        y = (v: number) => M.t + ((hi - v) / (hi - lo)) * (H - M.t - M.b);
+        for (let v = lo; v <= hi + step / 2; v += step) {
+          el("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: Math.abs(v) < step / 2 ? "zero" : "grid" }, svg);
+          const t = el("text", { x: M.l - 6, y: y(v) + 4, class: "ax", "text-anchor": "end" }, svg);
+          t.textContent = pct(Math.abs(v) < step / 2 ? 0 : v, step < 0.01 ? 1 : 0, false);
+        }
+      }
+      const ticks = Math.max(2, Math.min(6, Math.floor((W - M.l) / 110)));
+      const multiYear = dates[0].slice(0, 4) !== dates[n].slice(0, 4);
+      const at = new Set(Array.from({ length: ticks }, (_, j) => Math.round((j / (ticks - 1)) * n)));
+      for (const i of at) {
+        const t = el("text", { x: x(i), y: H - 6, class: "ax", "text-anchor": i === 0 ? "start" : i === n ? "end" : "middle" }, svg);
+        t.textContent = fmtDay(dates[i], multiYear);
+      }
+      for (const k of [...keys.filter((k) => k !== BOOK), ...keys.filter((k) => k === BOOK)]) {
+        let pen = "M";
+        let d = "";
+        vals[k].forEach((v, i) => {
+          if (!Number.isFinite(v)) {
+            pen = "M";
+            return;
+          }
+          d += `${pen}${x(i).toFixed(1)},${y(v).toFixed(1)}`;
+          pen = "L";
+        });
+        el("path", { d, class: k === BOOK || bold.includes(k) ? "ln book" : "ln", style: `stroke:${colors[k]}` }, svg);
+      }
+      if (!zeroTop && keys.includes(BOOK)) {
+        data.series.forEach((row, j) => {
+          if (row.from) el("circle", { cx: x(j + 1), cy: y(vals[BOOK][j + 1]), r: 3.5, class: "gap", style: `stroke:${colors[BOOK]}` }, svg);
+        });
+      }
+      if (!hover) return;
+
+      const cross = el("line", { y1: M.t, y2: H - M.b, class: "cross", visibility: "hidden" }, svg);
+      const dots = keys.map((k) => el("circle", { r: 3, style: `fill:${colors[k]}`, visibility: "hidden" }, svg));
+      const hit = el("rect", { x: M.l, y: 0, width: W - M.l - M.r, height: H, fill: "transparent" }, svg);
+      hit.addEventListener("pointermove", (ev) => {
+        const px = (ev as PointerEvent).offsetX;
+        const i = Math.max(0, Math.min(n, Math.round(((px - M.l) / (W - M.l - M.r)) * n)));
+        cross.setAttribute("x1", String(x(i)));
+        cross.setAttribute("x2", String(x(i)));
+        cross.setAttribute("visibility", "visible");
+        keys.forEach((k, j) => {
+          const ok = Number.isFinite(vals[k][i]);
+          dots[j].setAttribute("cx", String(x(i)));
+          if (ok) dots[j].setAttribute("cy", String(y(vals[k][i])));
+          dots[j].setAttribute("visibility", ok ? "visible" : "hidden");
+        });
+        const row = i ? data.series[i - 1] : null;
+        tip.replaceChildren();
+        const h = document.createElement("div");
+        h.className = "td";
+        h.textContent = i ? fmtDay(dates[i]) + (row?.from ? ` (since ${fmtDay(row.from, false)})` : "") : `${fmtDay(dates[0])} (start)`;
+        tip.append(h);
+        for (const k of keys) {
+          const line = document.createElement("div");
+          const sw = document.createElement("i");
+          sw.style.background = colors[k];
+          const day = row ? (k === BOOK ? row.r : row.bench?.[k] ?? null) : null;
+          line.append(sw, `${label(k)}  ${value(vals[k][i])}`);
+          if (row) {
+            const s = document.createElement("span");
+            s.textContent = ` ${step} ${pct(day)}`;
+            line.append(s);
+          }
+          tip.append(line);
+        }
+        tip.hidden = false;
+        const left = x(i) + 12;
+        tip.style.left = `${left + tip.offsetWidth > W ? x(i) - 12 - tip.offsetWidth : left}px`;
+      });
+      hit.addEventListener("pointerleave", () => {
+        tip.hidden = true;
+        cross.setAttribute("visibility", "hidden");
+        dots.forEach((d) => d.setAttribute("visibility", "hidden"));
+      });
+    }
+
+    const render = () => {
+      draw(main, cum, false, true);
+      if (dd) draw(dd, dds, true, false);
+    };
+    for (const b of boxes) {
+      b.addEventListener("change", () => {
+        const tr = root.querySelector<HTMLElement>(`tr[data-key="${b.value}"]`);
+        if (tr) tr.hidden = !b.checked;
+        render();
+      });
+    }
+    new ResizeObserver(render).observe(main);
+    render();
+  }
+</script>
+
+<style>
+  .chart {
+    margin: 0;
+  }
+  .toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border: 0;
+    margin: 0 0 10px;
+    padding: 0;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .tg {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    cursor: pointer;
+    user-select: none;
+  }
+  .tg:has(input:checked) {
+    color: var(--ink);
+    border-color: var(--ink-3);
+  }
+  .tg.fixed {
+    cursor: default;
+  }
+  .tg input {
+    margin: 0;
+    accent-color: var(--navy-2);
+  }
+  .tg i,
+  .sw {
+    width: 12px;
+    height: 3px;
+    display: inline-block;
+  }
+  .sw {
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .plot {
+    position: relative;
+  }
+  .plot svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+  .empty {
+    margin: 0;
+    padding-top: 80px;
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 0.85rem;
+  }
+  .plot :global(.grid) {
+    stroke: var(--rule-2);
+  }
+  .plot :global(.zero) {
+    stroke: var(--ink-3);
+    stroke-width: 1;
+  }
+  .plot :global(.ax) {
+    fill: var(--ink-3);
+    font-size: 11px;
+    font-family: var(--f-sans);
+    font-variant-numeric: tabular-nums;
+  }
+  .plot :global(.ln) {
+    fill: none;
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+  }
+  .plot :global(.ln.book) {
+    stroke-width: 2;
+  }
+  .plot :global(.gap) {
+    fill: var(--bg);
+    stroke-width: 1.5;
+  }
+  .plot :global(.cross) {
+    stroke: var(--ink-3);
+    stroke-dasharray: 3 3;
+  }
+  .tip {
+    position: absolute;
+    top: 8px;
+    min-width: 170px;
+    padding: 6px 8px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+    white-space: pre;
+  }
+  .tip :global(.td) {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .tip :global(i) {
+    display: inline-block;
+    width: 10px;
+    height: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .tip :global(span) {
+    color: var(--ink-3);
+  }
+  .metrics {
+    margin-top: 16px;
+  }
+  .metrics h3 {
+    margin-bottom: 2px;
+  }
+  figcaption h3:only-child {
+    margin-bottom: 13px;
+  }
+  .chart-foot,
+  .metrics .fineprint {
+    margin: 12px 0 0;
+  }
+  .metrics tr.book td {
+    font-weight: 600;
+  }
+  .metrics th,
+  .metrics td {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+  .metrics td:first-child {
+    white-space: nowrap;
+  }
+  .metrics .pos {
+    color: var(--pos);
+  }
+  .metrics .neg {
+    color: var(--neg);
+  }
+  .below {
+    margin-top: 16px;
+  }
+</style>

@@ -1,0 +1,93 @@
+---
+import { RANGE } from "../data/timeline";
+
+interface Props {
+  points: [string, number][];
+  ticks: number[];
+  log?: boolean;
+  sqrt?: boolean;
+  labelAt?: number[];
+  labelLeft?: number[];
+  ariaLabel: string;
+  fmt?: (v: number) => string;
+}
+const { points, ticks, log = false, sqrt = false, labelAt, labelLeft = [], ariaLabel, fmt = String } = Astro.props;
+
+const W = 560, H = 210, L = 40, R = 14, T = 20, B = 26;
+const t0 = Date.parse(RANGE.start), t1 = Date.parse(RANGE.end);
+const x = (d: string) => L + ((Date.parse(d) - t0) / (t1 - t0)) * (W - L - R);
+const f = (v: number) => (log ? Math.log10(v) : sqrt ? Math.sqrt(v) : v);
+const lo = log ? f(ticks[0]) : 0;
+const hi = f(ticks[ticks.length - 1]);
+const y = (v: number) => T + (1 - (f(v) - lo) / (hi - lo)) * (H - T - B);
+
+let d = "";
+points.forEach(([dt, v], i) => {
+  d += i ? `H${x(dt).toFixed(1)}V${y(v).toFixed(1)}` : `M${x(dt).toFixed(1)},${y(v).toFixed(1)}`;
+});
+d += `H${(W - R).toFixed(1)}`;
+
+const labelled = points
+  .map((p, i) => ({ p, left: labelLeft.includes(i), up: labelLeft.includes(i) && i === points.length - 1 }))
+  .filter((_, i) => !labelAt || labelAt.includes(i));
+const quarters = ["2026-01-01", "2026-04-01", "2026-07-01", "2026-10-01"];
+const qLabel = (s: string) =>
+  new Date(s).toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" });
+---
+
+<svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={ariaLabel}>
+  {
+    ticks.map((t) => (
+      <g>
+        <line x1={L} x2={W - R} y1={y(t)} y2={y(t)} class="grid" />
+        <text x={L - 6} y={y(t) + 3.5} text-anchor="end" class="ax">{fmt(t)}</text>
+      </g>
+    ))
+  }
+  {
+    quarters.map((q) => (
+      <text x={x(q)} y={H - 6} text-anchor="middle" class="ax">{qLabel(q)}</text>
+    ))
+  }
+  <path d={d} class="line" />
+  {
+    labelled.map(({ p: [dt, v], left, up }) => (
+      <g>
+        <rect x={x(dt) - 2.5} y={y(v) - 2.5} width="5" height="5" class="pt" />
+        <text x={x(dt) + (left ? -5 : 5)} y={y(v) + (left && !up ? 3.5 : -6)} text-anchor={left ? "end" : "start"} class="val">
+          {fmt(v)}
+        </text>
+      </g>
+    ))
+  }
+</svg>
+
+<style>
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--f-sans);
+  }
+  .grid {
+    stroke: var(--rule-2);
+    stroke-width: 1;
+  }
+  .ax {
+    font-size: 10.5px;
+    fill: var(--ink-3);
+  }
+  .line {
+    fill: none;
+    stroke: var(--navy-2);
+    stroke-width: 2;
+  }
+  .pt {
+    fill: var(--navy-2);
+  }
+  .val {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--ink);
+  }
+</style>
