@@ -5,6 +5,16 @@
  },
  "records": [
   {
+   "date": "2026-11-18",
+   "collection_cid": "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c",
+   "sha256": "350ea8d08d3c3110267d130a2f74f5c3f9cd644dac1f4f12436d0d14e79f6d4c",
+   "object_cid": "0xd014e1862e3929b6bcf82947245869d0b26b7755d36e01fbf25a9fa27895827b",
+   "committed_at": "2026-11-18T12:20:44Z",
+   "tx_hash": "0x1721e011988300d609ba2550be448789d2b4a100e4808bd15307ac5cc733332f",
+   "chain_id": 137,
+   "file": null
+  },
+  {
    "date": "2026-11-17",
    "collection_cid": "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c",
    "sha256": "928f9f61adcde35e33d540779e2ce7c6262c0b3dbf2828ec2127007c4468c962",
@@ -97,7 +107,7 @@
  ],
  "smoothed": {
   "collection_cid": "0x5c2c955cf8702149928cf1cd987813ea5fe3a13daa2d41efaeb9e1a1842bf0d5",
-  "date": "2026-11-17",
-  "object_cid": "0x533655a7bccf09b25ab9c266e9a95601fbe4e8dc89a189f95263238047c85ac8"
+  "date": "2026-11-18",
+  "object_cid": "0x116b98bc38def6b1baa74812858989fb00bf0d1b8f2fe877a1b85ae191633cd9"
  }
 }
