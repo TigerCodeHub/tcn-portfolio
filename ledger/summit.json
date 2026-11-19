@@ -5,6 +5,16 @@
  },
  "records": [
   {
+   "date": "2026-11-19",
+   "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
+   "sha256": "f4d94a4f2d27aefcbf4603ea3cf3e1c7a81fac6c8d00061082a20feb96726a59",
+   "object_cid": "0x0cd0281dd1b87453c986f9e0725776e156ce9bd6ece16688cbc458dd35750e27",
+   "committed_at": "2026-11-19T12:20:20Z",
+   "tx_hash": "0x753bf36677e8e38a8f86ca4aa571eb0885fe5b49ad7326d823b0182edc2f4460",
+   "chain_id": 137,
+   "file": null
+  },
+  {
    "date": "2026-11-18",
    "collection_cid": "0x8613be0a5ae45877c6d45cb1e4f0363f4d8238a13b8d51d9dd3f73a7e2b51ad0",
    "sha256": "5750b124580dc8abd8a53cf20a6f8fd750930cfb96e1328822232a0910df004e",
@@ -102,12 +112,12 @@
    "committed_at": "2026-11-05T12:20:15Z",
    "tx_hash": "0x4d43a0289eb98ce559bd01fa27613b7143f3ca7801a799e1bd3edaab8555c2ed",
    "chain_id": 137,
-   "file": null
+   "file": "/allocations/summit/summit_20261105.csv"
   }
  ],
  "smoothed": {
   "collection_cid": "0x5172cbb8014dfed1cec814c5a608f7a606eb9706f148d91804c2d7a24e238c56",
-  "date": "2026-11-18",
-  "object_cid": "0x9d19478f73f5a545798c5bbb0c03d6c394098dc8ac3b3372562f3dd8bb0a0ecc"
+  "date": "2026-11-19",
+  "object_cid": "0xf9cb2fd7a72eff2e67d520253c6362b855ba3495e3e9c19c4f7a4dec698f9b2a"
  }
 }
