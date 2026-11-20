@@ -5,6 +5,16 @@
  },
  "records": [
   {
+   "date": "2026-11-20",
+   "collection_cid": "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c",
+   "sha256": "395f8980373dfda21c5bf1b471243770c59e1d0c8745b6897485f9383f90e061",
+   "object_cid": "0x6ac317a129f19d9a35e3da53353a74b8377ab52856f1adb2533b3a290c3176b9",
+   "committed_at": "2026-11-20T12:20:41Z",
+   "tx_hash": "0x90a6aac74a9e7bd5e2bbc18c0d753b9ce70551d5fd33d035c2e59f1088f27fdc",
+   "chain_id": 137,
+   "file": null
+  },
+  {
    "date": "2026-11-19",
    "collection_cid": "0xa8f974aaed1fe5a0f34c7a08b4f719fb741f134a676bc3a0983bb844b856b48c",
    "sha256": "717c7943f6f69b2ca0380fb35050ff3d1a004587e9aa9b5a3cdaaa1f7bcc75a8",
@@ -102,7 +112,7 @@
    "committed_at": "2026-11-06T12:20:58Z",
    "tx_hash": "0x41d7ba3218cc4c936f38d38a3e0cc6a77c1596faf9a300365a21241e2229bcd5",
    "chain_id": 137,
-   "file": null
+   "file": "/allocations/ridgeline/ridgeline_20261106.csv"
   },
   {
    "date": "2026-11-05",
@@ -117,7 +127,7 @@
  ],
  "smoothed": {
   "collection_cid": "0x5c2c955cf8702149928cf1cd987813ea5fe3a13daa2d41efaeb9e1a1842bf0d5",
-  "date": "2026-11-19",
-  "object_cid": "0x707c65c271baf26ac39aad90a33527c1ac365624adfe4278eef585ac41c842a8"
+  "date": "2026-11-20",
+  "object_cid": "0x3896d4860e640d2fb6d42d4c03bf27fc3e87fd277eebd805d483464472bd4e71"
  }
 }
