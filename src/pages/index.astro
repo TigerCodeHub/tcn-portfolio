@@ -2,7 +2,7 @@
 import Base from "../layouts/Base.astro";
 import { SITE } from "../data/site";
 import { url } from "../lib/url";
-import { FIRST_COMMIT } from "../data/timeline";
+import { FIRST_COMMIT, MODELS_TRAINED_TEXT, THROUGHPUT_GAIN } from "../data/timeline";
 
 const days = Math.floor((Date.now() - Date.parse(`${FIRST_COMMIT}T00:00:00Z`)) / 86_400_000).toLocaleString("en-US");
 ---
@@ -28,7 +28,7 @@ const days = Math.floor((Date.now() - Date.parse(`${FIRST_COMMIT}T00:00:00Z`)) /
         <a class="card" href={url("/research/")}>
           <h2>Research</h2>
           <p>
-            {days} days of engineering history: 35,000+ models trained, a 640x improvement on training rate per
+            {days} days of engineering history: {MODELS_TRAINED_TEXT} models trained, a {THROUGHPUT_GAIN}x total improvement in training rate per
             machine, and the growth from 5 ETFs to a 300 large-cap U.S. equity universe.
           </p>
           <span class="more">View history</span>
@@ -60,7 +60,7 @@ const days = Math.floor((Date.now() - Date.parse(`${FIRST_COMMIT}T00:00:00Z`)) /
         <h2>Built from scratch</h2>
         <ul>
           <li>Model architecture built from the ground up in PyTorch</li>
-          <li>Purpose-built Triton GPU kernels for rapid fused operations</li>
+          <li>Purpose-built Triton GPU kernels: fused convolutions, pooling and optimizer, with fp16 tensor-core math</li>
           <li>Custom worker queue and training software</li>
         </ul>
       </section>

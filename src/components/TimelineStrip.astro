@@ -1,5 +1,5 @@
 ---
-import { CATS, ERAS, EVENTS, MODELS, RANGE, UNIVERSE } from "../data/timeline";
+import { CATS, ERAS, EVENTS, MODELS, MODELS_TRAINED, RANGE, UNIVERSE } from "../data/timeline";
 
 const W = 1160, L = 46, R = 46, LANE = 22, BAND = 24, CHAR = 6.4;
 const t0 = Date.parse(RANGE.start), t1 = Date.parse(RANGE.end);
@@ -90,9 +90,10 @@ MODELS.forEach(([d, v]) => {
   mPath += `H${x(d).toFixed(1)}V${my(v).toFixed(1)}`;
 });
 mPath += `H${uEnd.toFixed(1)}`;
-const modelsLabel = `~${Math.round(mMax / 1000)}k models trained`;
+const modelsLabel = `~${Math.round(MODELS_TRAINED / 1000)}k models trained`;
 const nameTicks = [5, 50, 100, 200, 300];
-const modelTicks = [0, 10_000, 20_000, 30_000];
+// every 10k up to the current total, so the axis grows with MODELS
+const modelTicks = Array.from({ length: Math.floor(mMax / 10_000) + 1 }, (_, i) => i * 10_000);
 
 const months: string[] = [];
 for (let d = new Date(Date.UTC(2025, 10, 1)); x(d.toISOString()) + 40 < W; d.setUTCMonth(d.getUTCMonth() + 1)) {

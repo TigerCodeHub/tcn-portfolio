@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import Figures from "../../components/Figures.astro";
 import TimelineStrip from "../../components/TimelineStrip.astro";
 import StepChart from "../../components/StepChart.astro";
-import { CATS, COMMITS, ERAS, EVENTS, FIRST_COMMIT, STAGES, THROUGHPUT, TOTAL_THROUGHPUT } from "../../data/timeline";
+import { CATS, COMMITS, ERAS, EVENTS, FIRST_COMMIT, STAGES, THROUGHPUT, THROUGHPUT_GAIN, TOTAL_THROUGHPUT } from "../../data/timeline";
 
 const fmt = (d: string) =>
   new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -36,8 +36,7 @@ const kfmt = (v: number) =>
   <div class="wrap">
     <section class="section">
       <p class="lede note-prop">
-        Much of the research (features, model architecture, training methods and more) is proprietary and not
-        disclosed here. What can be shared is below.
+        Most details of the features, model architecture and training methods are proprietary and not disclosed here.
       </p>
       <div class="section-head">
         <h2>Overview</h2>
@@ -68,29 +67,29 @@ const kfmt = (v: number) =>
       <div class="section-head"><h2>Training Throughput Over Time</h2></div>
       <div class="grid-2">
         <div class="panel">
-          <h3>Training throughput per machine – {gain(THROUGHPUT)}x improvement</h3>
-          <div class="note">Stock-days processed per second on one machine.</div>
+          <h3>Training throughput per machine – {THROUGHPUT_GAIN}x total improvement</h3>
+          <div class="note">Stock-days per second on one machine.</div>
           <StepChart
             points={THROUGHPUT}
-            ticks={[0, 20000, 40000, 60000, 80000]}
-            labelAt={[0, 1, 2, 5, 6]}
-            labelLeft={[0, 1]}
+            ticks={[0, 20000, 40000, 60000, 100000, 150000]}
+            labelAt={[0, 1, 2, 5, 8]}
+            labelLeft={[0, 1, 8]}
             sqrt
             fmt={(v) => (v === THROUGHPUT[0][1] ? `${v} (CPU)` : kfmt(v))}
-            ariaLabel="Throughput per machine rose from about 113 stock-days per second on a CPU machine in December 2025 to 1,400 on the first GPU run, 10,700 after caching training windows in RAM, 51,000 after span convolution in August 2026, and about 72,000 after the October 2026 kernels."
+            ariaLabel="Throughput per machine rose from about 109 stock-days per second on a CPU machine in December 2025 to 1,350 on the first GPU run, 10,300 after caching training windows in RAM, 49,000 after span convolution in August 2026, about 70,000 after the October 2026 kernels, 84,000 after the fp16 kernels, and about 137,000 after the CUTLASS/CUDA kernels."
           />
         </div>
         <div class="panel">
           <h3>Total training throughput – {gain(TOTAL_THROUGHPUT)}x increase</h3>
-          <div class="note">Approximate stock-days per second across the available machine pool, which grew larger over time.</div>
+          <div class="note">Approximate stock-days per second across the whole machine pool.</div>
           <StepChart
             points={TOTAL_THROUGHPUT}
-            ticks={[0, 500000, 1000000, 2000000, 3000000]}
+            ticks={[0, 500000, 1000000, 2000000, 4000000, 6000000]}
             labelAt={[0, tIdx("2025-12-26"), tIdx("2026-06-23"), tIdx("2026-08-30"), TOTAL_THROUGHPUT.length - 1]}
             labelLeft={[0, TOTAL_THROUGHPUT.length - 1]}
             sqrt
             fmt={(v) => (v === TOTAL_THROUGHPUT[0][1] ? `${kfmt(v)} (CPU)` : kfmt(v))}
-            ariaLabel="Approximate pool-wide training throughput rose from about 680 stock-days per second from 12 CPU runs in December 2025 to roughly 2.9 million across 40 GPUs in November 2026."
+            ariaLabel="Approximate pool-wide training throughput rose from about 650 stock-days per second from 12 CPU runs in December 2025 to roughly 5.5 million across 40 GPUs in November 2026."
           />
         </div>
       </div>
@@ -147,7 +146,7 @@ const kfmt = (v: number) =>
 
       <div class="eras" id="eras">
         {
-          ERAS.map((era) => (
+          [...ERAS].reverse().map((era) => (
             <section class="era">
               <header>
                 <h3>{era.name}</h3>
@@ -156,8 +155,8 @@ const kfmt = (v: number) =>
                 </div>
               </header>
               <ol class="events">
-                {EVENTS.filter((e) => e.era === era.id).map((e) => (
-                  <li class:list={["ev", { unstarred: !e.star }]}>
+                {EVENTS.filter((e) => e.era === era.id).reverse().map((e) => (
+                  <li class:list={["ev", { unstarred: !e.star, "has-x": e.explain }]} data-x={e.explain ? `x-${e.explain}` : undefined}>
                     {e.star && (
                       <span class:list={["star", e.star === "b" ? "big" : "small"]} aria-label={e.star === "b" ? "Major milestone" : "Small milestone"}>
                         ★
@@ -172,6 +171,11 @@ const kfmt = (v: number) =>
                     <div class="body">
                       <div class="title">{e.title}</div>
                       {e.detail && <div class="detail">{e.detail}</div>}
+                      {e.explain && (
+                        <button type="button" class="xbtn" data-x={`x-${e.explain}`}>
+                          How it works <span aria-hidden="true">→</span>
+                        </button>
+                      )}
                     </div>
                     <div class="metric num">{e.metric ?? ""}</div>
                   </li>
@@ -182,6 +186,124 @@ const kfmt = (v: number) =>
         }
       </div>
     </section>
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <defs>
+          <marker id="arr" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#6b7380" /></marker>
+        </defs>
+      </svg>
+      <dialog class="explain" id="x-span" aria-labelledby="x-span-t">
+        <form method="dialog"><button class="xclose" aria-label="Close">×</button></form>
+          <h3 id="x-span-t">One convolution pass per stock</h3>
+          <div class="note">Aug 2026 · 3.2x faster training steps</div>
+          <svg class="span-fig" viewBox="0 0 560 150" role="img" aria-label="Before: each overlapping 50-day window runs the network separately, recomputing shared days. After: the network runs once over each stock's full span and every window is read from that output.">
+            <text x="0" y="12" class="fl">Per-window convolution</text>
+            <rect x="20" y="20" width="200" height="10" class="w" />
+            <rect x="84" y="34" width="200" height="10" class="w" />
+            <rect x="148" y="48" width="200" height="10" class="w" />
+            <rect x="212" y="62" width="200" height="10" class="w" />
+            <text x="420" y="58" class="fs">shared days</text>
+            <text x="420" y="70" class="fs">recomputed</text>
+            <text x="0" y="96" class="fl">Span convolution, windows pooled from one pass</text>
+            <rect x="0" y="104" width="412" height="12" class="s" />
+            <rect x="0" y="104" width="20" height="12" class="lead" />
+            <line x1="20" x2="220" y1="124" y2="124" class="r" />
+            <line x1="84" x2="284" y1="130" y2="130" class="r" />
+            <line x1="148" x2="348" y1="136" y2="136" class="r" />
+            <line x1="212" x2="412" y1="142" y2="142" class="r" />
+            <text x="420" y="114" class="fs">each day computed once</text>
+          </svg>
+          <p>
+            The network previously ran once per overlapping lookback window, recomputing shared days. It now
+            convolves each stock's full history once and pools every window from that output, which also removes
+            zero-padding at window edges. In daily evaluation, where windows overlap by all but one day, convolution work
+            drops ~27x.
+          </p>
+      </dialog>
+      <dialog class="explain" id="x-trunk" aria-labelledby="x-trunk-t">
+        <form method="dialog"><button class="xclose" aria-label="Close">×</button></form>
+          <h3 id="x-trunk-t">Fused convolution kernels</h3>
+          <div class="note">Aug 2026 · 1.16x per step</div>
+          <svg class="fig" viewBox="0 0 480 170" role="img" aria-label="Unfused: convolution, bias, GELU, dropout and residual add are five kernels; each reads its input from GPU memory and writes its result back, five reads and five writes. Fused: one kernel reads the input once at the start and writes the output once at the end; everything in between stays in registers.">
+            <text x="0" y="12" class="fl">Unfused (5 kernels): 5 reads, 5 writes</text>
+            <rect x="0" y="20" width="480" height="15" class="mem" /><text x="240" y="31" class="memt">GPU memory</text>
+            <g class="o"><rect x="0" y="55" width="80" height="22" rx="2" /><rect x="100" y="55" width="80" height="22" rx="2" /><rect x="200" y="55" width="80" height="22" rx="2" /><rect x="300" y="55" width="80" height="22" rx="2" /><rect x="400" y="55" width="80" height="22" rx="2" /></g>
+            <g class="bt"><text x="40" y="70">conv</text><text x="140" y="70">+ bias</text><text x="240" y="70">GELU</text><text x="340" y="70">dropout</text><text x="440" y="70">+ residual</text></g>
+            <line x1="14" x2="14" y1="35" y2="53" class="ar" /><line x1="66" x2="66" y1="55" y2="37" class="ar" /><line x1="114" x2="114" y1="35" y2="53" class="ar" /><line x1="166" x2="166" y1="55" y2="37" class="ar" /><line x1="214" x2="214" y1="35" y2="53" class="ar" /><line x1="266" x2="266" y1="55" y2="37" class="ar" /><line x1="314" x2="314" y1="35" y2="53" class="ar" /><line x1="366" x2="366" y1="55" y2="37" class="ar" /><line x1="414" x2="414" y1="35" y2="53" class="ar" /><line x1="466" x2="466" y1="55" y2="37" class="ar" />
+            <text x="0" y="105" class="fl">Fused (1 kernel): 1 read, 1 write</text>
+            <rect x="0" y="113" width="480" height="15" class="mem" /><text x="240" y="124" class="memt">GPU memory</text>
+            <rect x="0" y="148" width="480" height="22" rx="2" class="n" />
+            <text x="240" y="163" class="bt">conv → + bias → GELU → dropout → + residual (in registers)</text>
+            <line x1="14" x2="14" y1="128" y2="146" class="ar" /><line x1="466" x2="466" y1="148" y2="130" class="ar" />
+            <g class="fs"><text x="22" y="142">read</text><text x="458" y="142" text-anchor="end">write</text></g>
+          </svg>
+          <p>
+            Each convolution block is one Triton kernel: a matrix multiply over (stock, day) rows, with filter taps
+            read as shifted inputs so no unfolded copy is built. Bias, GELU, dropout and the residual are applied
+            before writing to memory. Custom backward kernels compute input and weight gradients; results match
+            PyTorch to ~1e-5.
+          </p>
+      </dialog>
+      <dialog class="explain" id="x-fp16" aria-labelledby="x-fp16-t">
+        <form method="dialog"><button class="xclose" aria-label="Close">×</button></form>
+          <h3 id="x-fp16-t">fp16 tensor-core math</h3>
+          <div class="note">Nov 2026 · 1.21x on an RTX A1000, 2.1x on an RTX 8000</div>
+          <svg class="fig" viewBox="0 0 480 172" role="img" aria-label="Data path: an fp32 tile is multiplied by a power-of-two scale, cast to fp16, multiplied on tensor cores with fp32 accumulation, then unscaled. A log-scale range chart shows a gradient tensor near 1e-12, which would flush to zero in fp16, shifted by the scale so its largest value lands between 2^13 and 2^14, inside fp16's range.">
+            <text x="0" y="12" class="fl">Matrix-multiply data path</text>
+            <g class="o"><rect x="0" y="20" width="62" height="24" rx="2" /><rect x="418" y="20" width="62" height="24" rx="2" /></g>
+            <g class="n"><rect x="84" y="20" width="62" height="24" rx="2" /><rect x="168" y="20" width="56" height="24" rx="2" /><rect x="246" y="20" width="98" height="24" rx="2" /><rect x="366" y="20" width="30" height="24" rx="2" /></g>
+            <g class="bt"><text x="31" y="36">fp32 tile</text><text x="115" y="36">× 2^k</text><text x="196" y="36">fp16</text><text x="295" y="36">tensor cores</text><text x="381" y="36">÷</text><text x="449" y="36">fp32 out</text></g>
+            <g class="ar"><line x1="62" x2="82" y1="32" y2="32" /><line x1="146" x2="166" y1="32" y2="32" /><line x1="224" x2="244" y1="32" y2="32" /><line x1="344" x2="364" y1="32" y2="32" /><line x1="396" x2="416" y1="32" y2="32" /></g>
+            <text x="295" y="58" class="fs" text-anchor="middle">fp16 × fp16, summed in fp32</text>
+            <text x="0" y="86" class="fl">Gradient magnitude vs. fp16 range (log scale)</text>
+            <rect x="219.8" y="100" width="255.0" height="14" class="band" />
+            <text x="347.3" y="110" class="fs" text-anchor="middle">fp16 normal range (6e-5 to 65,504)</text>
+            <line x1="0" x2="480" y1="122" y2="122" class="axis" />
+            <g class="tk"><line x1="0.0" x2="0.0" y1="122" y2="126" /><line x1="84.7" x2="84.7" y1="122" y2="126" /><line x1="169.4" x2="169.4" y1="122" y2="126" /><line x1="254.1" x2="254.1" y1="122" y2="126" /><line x1="338.8" x2="338.8" y1="122" y2="126" /><line x1="423.5" x2="423.5" y1="122" y2="126" /><line x1="480.0" x2="480.0" y1="122" y2="126" /></g>
+            <g class="fs"><text x="0.0" y="136" text-anchor="start">1e-12</text><text x="84.7" y="136" text-anchor="middle">1e-9</text><text x="169.4" y="136" text-anchor="middle">1e-6</text><text x="254.1" y="136" text-anchor="middle">1e-3</text><text x="338.8" y="136" text-anchor="middle">1</text><text x="423.5" y="136" text-anchor="middle">1e3</text><text x="480.0" y="136" text-anchor="end">1e5</text></g>
+            <rect x="0" y="146" width="31" height="10" rx="2" class="o" />
+            <rect x="426.8" y="146" width="31.1" height="10" rx="2" class="n" />
+            <line x1="34" x2="423.8" y1="151" y2="151" class="ar" />
+            <text x="200" y="168" class="fs" text-anchor="middle">unscaled: underflows to zero · scaled by 2^k: max in (2^13, 2^14]</text>
+          </svg>
+          <p>
+            fp16 autocast failed twice in 2026 (NaN losses, then overflows). fp16 is now used only inside the
+            convolution kernels: inputs are cast to fp16 and accumulated in fp32. Each tensor is first multiplied by a
+            power of two chosen from its maximum value, keeping it within fp16 range without adding rounding error.
+            Everything else stays fp32.
+          </p>
+      </dialog>
+      <dialog class="explain" id="x-hyperfine" aria-labelledby="x-hyperfine-t">
+        <form method="dialog"><button class="xclose" aria-label="Close">×</button></form>
+          <h3 id="x-hyperfine-t">Fused pooling, output head and optimizer</h3>
+          <div class="note">Oct 2026 · 1.41x per epoch</div>
+          <svg class="fig" viewBox="0 0 480 180" role="img" aria-label="Unfused: every pooling window is copied out of the stock's activation strip into its own tensor, then three separate pooling reductions each read all the copies. Fused: one kernel reads the strip once and computes all three pooled statistics for every window; in the backward pass a second kernel sends each window's gradient back to the days it covers, summed where windows overlap.">
+            <text x="0" y="12" class="fl">Unfused: per-window copies, three reductions</text>
+            <rect x="0" y="30" width="150" height="14" class="o" /><line x1="15" x2="15" y1="30" y2="44" class="cell" /><line x1="30" x2="30" y1="30" y2="44" class="cell" /><line x1="45" x2="45" y1="30" y2="44" class="cell" /><line x1="60" x2="60" y1="30" y2="44" class="cell" /><line x1="75" x2="75" y1="30" y2="44" class="cell" /><line x1="90" x2="90" y1="30" y2="44" class="cell" /><line x1="105" x2="105" y1="30" y2="44" class="cell" /><line x1="120" x2="120" y1="30" y2="44" class="cell" /><line x1="135" x2="135" y1="30" y2="44" class="cell" />
+            <text x="0" y="58" class="fs">one stock's activations</text>
+            <line x1="154" x2="190" y1="37" y2="37" class="ar" />
+            <g class="o"><rect x="196" y="20" width="70" height="8" /><rect x="196" y="30" width="70" height="8" /><rect x="196" y="40" width="70" height="8" /><rect x="196" y="50" width="70" height="8" /></g>
+            <text x="231" y="70" class="fs" text-anchor="middle">window copies</text>
+            <g class="ln"><line x1="266" x2="330" y1="39" y2="27" /><line x1="266" x2="330" y1="39" y2="45" /><line x1="266" x2="330" y1="39" y2="63" /></g>
+            <g class="o"><rect x="332" y="20" width="148" height="14" rx="2" /><rect x="332" y="38" width="148" height="14" rx="2" /><rect x="332" y="56" width="148" height="14" rx="2" /></g>
+            <g class="bt"><text x="406" y="31">pooling 1</text><text x="406" y="49">pooling 2</text><text x="406" y="67">pooling 3</text></g>
+            <text x="0" y="104" class="fl">Fused: single pass, all statistics per window</text>
+            <rect x="0" y="114" width="150" height="14" class="o" /><line x1="15" x2="15" y1="114" y2="128" class="cell" /><line x1="30" x2="30" y1="114" y2="128" class="cell" /><line x1="45" x2="45" y1="114" y2="128" class="cell" /><line x1="60" x2="60" y1="114" y2="128" class="cell" /><line x1="75" x2="75" y1="114" y2="128" class="cell" /><line x1="90" x2="90" y1="114" y2="128" class="cell" /><line x1="105" x2="105" y1="114" y2="128" class="cell" /><line x1="120" x2="120" y1="114" y2="128" class="cell" /><line x1="135" x2="135" y1="114" y2="128" class="cell" />
+            <g class="ln"><line x1="15" x2="90" y1="134" y2="134" class="r2" /><line x1="45" x2="120" y1="140" y2="140" class="r2" /><line x1="75" x2="150" y1="146" y2="146" class="r2" /></g>
+            <text x="0" y="164" class="fs">windows</text>
+            <line x1="154" x2="190" y1="121" y2="121" class="ar" />
+            <rect x="196" y="110" width="284" height="22" rx="2" class="n" />
+            <text x="338" y="125" class="bt">one kernel: all three poolings</text>
+            <path d="M196,128 C176,140 168,140 154,128" class="bk" />
+            <text x="198" y="146" class="fs">dashed: backward kernel, gradients</text>
+            <text x="198" y="158" class="fs">summed over overlapping windows</text>
+          </svg>
+          <p>
+            One kernel reads each stock's activations once and computes three pooled summary statistics for every
+            window; its backward kernel sums each day's gradient across the windows that contain it. The output
+            head is one kernel, and the Triton AdamW updates all parameters in one launch, matching PyTorch's fused
+            AdamW bit for bit.
+          </p>
+      </dialog>
   </div>
 </Base>
 
@@ -189,6 +311,19 @@ const kfmt = (v: number) =>
   const box = document.getElementById("majorOnly") as HTMLInputElement;
   const eras = document.getElementById("eras")!;
   box.addEventListener("change", () => eras.classList.toggle("major-only", box.checked));
+
+  // Timeline entries with an explainer open it as a dialog (the whole row is clickable; the button is the
+  // keyboard target). A click on the backdrop closes it.
+  eras.addEventListener("click", (ev) => {
+    const row = (ev.target as HTMLElement).closest<HTMLElement>("[data-x]");
+    if (!row) return;
+    (document.getElementById(row.dataset.x!) as HTMLDialogElement | null)?.showModal();
+  });
+  document.querySelectorAll<HTMLDialogElement>("dialog.explain").forEach((d) =>
+    d.addEventListener("click", (ev) => {
+      if (ev.target === d) d.close();
+    }),
+  );
 </script>
 
 <style>
@@ -230,6 +365,196 @@ const kfmt = (v: number) =>
     width: 9px;
     height: 9px;
     display: inline-block;
+  }
+  .explain {
+    width: min(640px, calc(100% - 32px));
+    max-height: calc(100% - 32px);
+    border: 1px solid var(--rule);
+    padding: 18px 20px 16px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .explain::backdrop {
+    background: rgb(20 24 30 / 45%);
+  }
+  .explain h3 {
+    margin: 0 28px 2px 0;
+    font-size: 1.05rem;
+  }
+  .explain .note {
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    margin-bottom: 8px;
+  }
+  .xclose {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: 0;
+    background: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--ink-3);
+    cursor: pointer;
+    padding: 4px 6px;
+  }
+  .xclose:hover {
+    color: var(--ink);
+  }
+  .xbtn,
+  .xkey {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 2px 9px;
+    border: 1px solid var(--c-speed);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c-speed) 10%, #fff);
+    color: var(--c-speed);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .xkey {
+    margin: 0 4px 0 0;
+    padding: 0 7px;
+    font-size: 0.72rem;
+    cursor: default;
+  }
+  .ev.has-x {
+    cursor: pointer;
+  }
+  .ev.has-x:hover {
+    background: color-mix(in srgb, var(--c-speed) 6%, transparent);
+  }
+  .ev.has-x:hover .xbtn,
+  .xbtn:focus-visible {
+    background: var(--c-speed);
+    color: #fff;
+  }
+  .explain p {
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    margin: 6px 0 0;
+  }
+  .span-fig {
+    width: 100%;
+    height: auto;
+    margin: 4px 0 2px;
+  }
+  .span-fig .fl {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--ink-2);
+  }
+  .span-fig .fs {
+    font-size: 10px;
+    fill: var(--ink-3);
+  }
+  .span-fig .w {
+    fill: #e4e7eb;
+    stroke: var(--ink-3);
+  }
+  .span-fig .s {
+    fill: color-mix(in srgb, var(--c-speed) 28%, #fff);
+    stroke: var(--c-speed);
+  }
+  .span-fig .lead {
+    fill: color-mix(in srgb, var(--c-speed) 10%, #fff);
+    stroke: var(--c-speed);
+    stroke-dasharray: 2 2;
+  }
+  .span-fig .r {
+    stroke: var(--c-speed);
+    stroke-width: 2;
+  }
+  .fig {
+    width: 100%;
+    height: auto;
+    margin: 6px 0 2px;
+  }
+  .fig text {
+    font-family: inherit;
+  }
+  .fig .fl {
+    font-size: 11px;
+    font-weight: 600;
+    fill: var(--ink-2);
+  }
+  .fig .fs,
+  .fig .fs text,
+  .fig .lg text,
+  .fig .vl text {
+    font-size: 10px;
+    fill: var(--ink-3);
+  }
+  .fig .vl text {
+    fill: var(--ink-2);
+    font-weight: 600;
+  }
+  .fig .bl {
+    font-size: 11px;
+    fill: var(--ink-2);
+  }
+  .fig .bt,
+  .fig .bt text {
+    font-size: 10.5px;
+    fill: var(--ink);
+    text-anchor: middle;
+  }
+  .fig .o,
+  .fig .o rect {
+    fill: #e4e7eb;
+    stroke: var(--ink-3);
+  }
+  .fig .n,
+  .fig .n rect {
+    fill: color-mix(in srgb, var(--c-speed) 28%, #fff);
+    stroke: var(--c-speed);
+  }
+  .fig .ln,
+  .fig .ln line {
+    stroke: var(--ink-3);
+    stroke-width: 1.5;
+  }
+  .fig .ln .r2 {
+    stroke: var(--c-speed);
+    stroke-width: 2;
+  }
+  .fig .ar,
+  .fig .ar line {
+    stroke: var(--ink-3);
+    stroke-width: 1.5;
+    marker-end: url(#arr);
+  }
+  .fig .cell {
+    stroke: var(--ink-3);
+    stroke-opacity: 0.5;
+  }
+  .fig .bk {
+    fill: none;
+    stroke: var(--c-speed);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 2;
+    marker-end: url(#arr);
+  }
+  .fig .memt {
+    font-size: 10px;
+    font-weight: 600;
+    fill: var(--ink-2);
+    text-anchor: middle;
+  }
+  .fig .mem {
+    fill: var(--rule);
+  }
+  .fig .band {
+    fill: color-mix(in srgb, var(--c-speed) 12%, #fff);
+    stroke: color-mix(in srgb, var(--c-speed) 50%, #fff);
+  }
+  .fig .axis,
+  .fig .tk line,
+  .fig .grid line {
+    stroke: var(--rule);
   }
   .tl-title {
     display: flex;
