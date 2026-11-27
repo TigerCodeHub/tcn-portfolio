@@ -2,7 +2,7 @@
  "book": "ridgeline",
  "name": "Ridgeline",
  "inception": "2026-11-10",
- "as_of": "2026-11-25",
+ "as_of": "2026-11-27",
  "benchmarks": {
   "SPY": "S&P 500 (SPY)",
   "QQQ": "Nasdaq-100 (QQQ)",
@@ -136,11 +136,23 @@
    "r": -0.005899,
    "index": 94.0065,
    "bench": {
-    "SPY": null,
-    "QQQ": null,
-    "IWM": null,
-    "RSP": null,
-    "DIA": null
+    "SPY": -0.002894,
+    "QQQ": -0.006535,
+    "IWM": 0.006476,
+    "RSP": 0.008319,
+    "DIA": 0.003062
+   }
+  },
+  {
+   "date": "2026-11-27",
+   "r": 0.022588,
+   "index": 96.13,
+   "bench": {
+    "SPY": 0.016213,
+    "QQQ": 0.026911,
+    "IWM": 0.018299,
+    "RSP": 0.012237,
+    "DIA": 0.012628
    }
   }
  ]
